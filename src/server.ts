@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Garu } from "@garuhq/node";
 
@@ -5,6 +6,9 @@ import { registerPrompts } from "./prompts/payments.js";
 import { registerResources } from "./resources/docs.js";
 import { registerChargeTools } from "./tools/charges.js";
 import { registerCustomerTools } from "./tools/customers.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json") as { version: string };
 
 export interface CreateServerOptions {
   apiKey: string;
@@ -20,7 +24,7 @@ export function createServer(options: CreateServerOptions): McpServer {
   const server = new McpServer(
     {
       name: "garu-mcp",
-      version: "0.1.0",
+      version,
     },
     {
       capabilities: {
@@ -29,7 +33,7 @@ export function createServer(options: CreateServerOptions): McpServer {
         prompts: {},
       },
       instructions:
-        "Garu is a Brazilian payment gateway. Use the charge tools to create PIX, credit card, or boleto payments. " +
+        "Garu is a Brazilian payment gateway. Use the charge tools to create PIX or boleto payments. " +
         "Use customer tools to manage your customer base. All monetary values are in BRL (Brazilian Real). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify.",
     },

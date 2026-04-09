@@ -13,9 +13,19 @@ if (!apiKey) {
   process.exit(1);
 }
 
+const baseUrl = process.env.GARU_BASE_URL;
+
+if (baseUrl) {
+  process.stderr.write(
+    `WARNING: GARU_BASE_URL is set to "${baseUrl}". ` +
+      "All API calls (including customer PII) will be sent to this URL instead of the Garu production API. " +
+      "Only use this for development.\n",
+  );
+}
+
 const server = createServer({
   apiKey,
-  baseUrl: process.env.GARU_BASE_URL,
+  baseUrl,
 });
 
 const transport = new StdioServerTransport();

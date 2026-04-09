@@ -1,26 +1,11 @@
-import type { Garu } from "@garuhq/node";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
-export function createMockGaru(): Garu {
-  const charges = {
-    create: vi.fn(),
-    list: vi.fn(),
-    get: vi.fn(),
-    refund: vi.fn(),
-  };
+import { createServer } from "../src/server.js";
 
-  const customers = {
-    create: vi.fn(),
-    list: vi.fn(),
-    get: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  };
-
-  const meta = {
-    get: vi.fn(),
-  };
-
-  return { charges, customers, meta, webhooks: {} } as unknown as Garu;
+export function setupServer() {
+  const server = createServer({ apiKey: "sk_test_abc" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const client = new Client({ name: "test-client", version: "1.0.0" });
+  return { server, client, clientTransport, serverTransport };
 }
-
-import { vi } from "vitest";

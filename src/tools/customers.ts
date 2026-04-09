@@ -1,50 +1,15 @@
 import type { Garu, CreateCustomerParams, UpdateCustomerParams } from "@garuhq/node";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-
-function ok(data: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-
-function fail(err: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `Error: ${err instanceof Error ? err.message : String(err)}`,
-      },
-    ],
-    isError: true as const,
-  };
-}
+import { customerSchema, ok, fail } from "./shared.js";
 
 export function registerCustomerTools(server: McpServer, garu: Garu): void {
   server.tool(
     "create_customer",
     "Create a customer and link to the current seller.",
     {
-      name: z.string().describe("Customer full name"),
-      email: z.string().email(),
-      document: z
-        .string()
-        .regex(/^\d{11}$|^\d{14}$/)
-        .describe("CPF (11 digits) or CNPJ (14 digits)"),
-      phone: z
-        .string()
-        .regex(/^\d{10,11}$/)
-        .describe("Phone with area code"),
+      ...customerSchema.shape,
       personType: z.enum(["fisica", "juridica"]).describe("Person type"),
-      zipCode: z.string().optional(),
-      street: z.string().optional(),
-      number: z.string().optional(),
-      complement: z.string().optional(),
-      neighborhood: z.string().optional(),
-      city: z.string().optional(),
-      state: z
-        .string()
-        .regex(/^[A-Z]{2}$/)
-        .optional()
-        .describe("2-letter state code"),
     },
     async (args) => {
       try {
@@ -63,7 +28,7 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     {
       page: z.number().min(1).optional().describe("Page number, default 1"),
       limit: z.number().min(1).max(100).optional().describe("Items per page, default 20"),
-      search: z.string().optional().describe("Search by name, email, or document"),
+      search: z.string().max(255).optional().describe("Search by name, email, or document"),
     },
     async (args) => {
       try {
@@ -96,18 +61,30 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     "Update a customer's information for the current seller.",
     {
       id: z.number().describe("Customer ID"),
-      name: z.string().optional(),
-      email: z.string().email().optional(),
-      phone: z.string().optional(),
-      document: z.string().optional(),
+      name: z.string().max(255).optional(),
+      email: z.string().email().max(255).optional(),
+      phone: z
+        .string()
+        .regex(/^\d{10,11}$/)
+        .optional()
+        .describe("Phone with area code"),
+      document: z
+        .string()
+        .regex(/^\d{11}$|^\d{14}$/)
+        .optional()
+        .describe("CPF (11 digits) or CNPJ (14 digits)"),
       personType: z.enum(["fisica", "juridica"]).optional(),
-      zipCode: z.string().optional(),
-      street: z.string().optional(),
-      number: z.string().optional(),
-      complement: z.string().optional(),
-      neighborhood: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
+      zipCode: z.string().regex(/^\d{8}$/).optional(),
+      street: z.string().max(255).optional(),
+      number: z.string().max(20).optional(),
+      complement: z.string().max(255).optional(),
+      neighborhood: z.string().max(255).optional(),
+      city: z.string().max(255).optional(),
+      state: z
+        .string()
+        .regex(/^[A-Z]{2}$/)
+        .optional()
+        .describe("2-letter state code"),
     },
     async (args) => {
       try {

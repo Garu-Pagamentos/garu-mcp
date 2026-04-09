@@ -1,14 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { describe, expect, it } from "vitest";
 
-import { createServer } from "../src/server.js";
+import { setupServer } from "./helpers.js";
 
-function setupServer() {
-  const server = createServer({ apiKey: "sk_test_abc" });
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  const client = new Client({ name: "test-client", version: "1.0.0" });
-  return { server, client, clientTransport, serverTransport };
+function errorText(result: { content: unknown }): string {
+  return ((result.content as Array<{ text: string }>)[0]).text;
 }
 
 describe("charge tools", () => {
@@ -20,7 +15,6 @@ describe("charge tools", () => {
     const names = tools.tools.map((t) => t.name);
 
     expect(names).toContain("create_pix_charge");
-    expect(names).toContain("create_card_charge");
     expect(names).toContain("create_boleto_charge");
     expect(names).toContain("list_charges");
     expect(names).toContain("get_charge");
@@ -30,18 +24,31 @@ describe("charge tools", () => {
     await server.close();
   });
 
-  it("get_charge returns charge data", async () => {
+  it("does not expose create_card_charge (PCI safety)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
-    // The server uses a real Garu SDK client pointed at the actual API,
-    // so we can't mock it easily in integration tests. Instead, we verify
-    // the tool handles errors gracefully (since sk_test_abc won't auth).
+    const tools = await client.listTools();
+    const names = tools.tools.map((t) => t.name);
+
+    expect(names).not.toContain("create_card_charge");
+
+    await client.close();
+    await server.close();
+  });
+
+  it("get_charge handles errors gracefully", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
     const result = await client.callTool({ name: "get_charge", arguments: { id: 1 } });
 
-    // Should get an error response (auth failure) rather than a crash
-    expect(result.content).toBeDefined();
+    expect(result.isError).toBe(true);
     expect(result.content).toHaveLength(1);
+    const text = errorText(result);
+    expect(text).toMatch(/^Error: /);
+    // Error sanitization: no raw URLs should leak
+    expect(text).not.toMatch(/https?:\/\/(?!.*redacted)/);
 
     await client.close();
     await server.close();
