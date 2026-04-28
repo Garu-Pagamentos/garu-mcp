@@ -1,6 +1,23 @@
+import { createRequire } from "node:module";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import updateNotifier from "update-notifier";
 
 import { createServer } from "./server.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { name: string; version: string };
+
+const notifier = updateNotifier({
+  pkg,
+  updateCheckInterval: 1000 * 60 * 60 * 24,
+});
+
+if (notifier.update) {
+  process.stderr.write(
+    `A new version of ${pkg.name} is available: ${notifier.update.latest} (currently installed ${notifier.update.current}).\n` +
+      `Update with: rm -rf ~/.npm/_npx, then restart your MCP client.\n`,
+  );
+}
 
 const apiKey = process.env.GARU_API_KEY;
 
