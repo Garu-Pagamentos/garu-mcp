@@ -3,14 +3,14 @@
 [![npm version](https://img.shields.io/npm/v/@garuhq/mcp)](https://www.npmjs.com/package/@garuhq/mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-An MCP server for the [Garu](https://garu.com.br) payment platform. Create charges, manage customers, and process payments via PIX, credit card, and boleto — directly from any MCP client like Claude Desktop, Cursor, or Claude Code.
+An MCP server for the [Garu](https://garu.com.br) payment platform. Create charges, manage customers, and discover products — directly from any MCP client like Claude Desktop, Cursor, or Claude Code.
 
 ## Features
 
 - **PIX Charges** — Create instant PIX charges with auto-generated QR codes for Brazilian real-time payments.
-- **Credit Card Charges** — Process card payments with support for 1–12 installments.
 - **Boleto Charges** — Generate boleto bancário payment slips.
 - **Charge Management** — List, retrieve, and refund charges (full or partial).
+- **Products** — List your seller's products and look them up by UUID — the same UUID accepted by the charge tools.
 - **Customers** — Create, list, get, update, and remove customers linked to your seller account.
 
 ## Setup
@@ -105,15 +105,23 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y @garuhq/mcp
 
 ## Tools
 
-### Charges (6 tools)
+### Products (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `list_products` | List your seller's products with pagination and search |
+| `get_product` | Get a single product by UUID — the identifier accepted by the charge tools |
+
+> Use `list_products` to discover the UUID you'll pass to `create_pix_charge` or `create_boleto_charge`.
+
+### Charges (5 tools)
 
 | Tool | Description |
 |------|-------------|
 | `create_pix_charge` | Create a PIX charge with QR code |
-| `create_card_charge` | Create a credit card charge (1–12 installments) |
 | `create_boleto_charge` | Create a boleto bancário charge |
 | `list_charges` | List charges with pagination and filters |
-| `get_charge` | Get charge details by ID |
+| `get_charge` | Get charge details by ID (includes `status`) |
 | `refund_charge` | Refund a charge (full or partial) |
 
 ### Customers (5 tools)
