@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import { setupServer } from "./helpers.js";
 
 describe("server", () => {
-  it("exposes 10 tools total (5 charge + 5 customer)", async () => {
+  it("exposes 12 tools total (5 charge + 5 customer + 2 product)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
     const tools = await client.listTools();
-    expect(tools.tools).toHaveLength(10);
+    expect(tools.tools).toHaveLength(12);
+    const names = tools.tools.map((t) => t.name);
+    expect(names).toContain("list_products");
+    expect(names).toContain("get_product");
 
     await client.close();
     await server.close();

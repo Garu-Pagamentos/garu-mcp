@@ -5,13 +5,17 @@ const QUICKSTART = `# Garu Quickstart
 ## 1. Get an API key
 Sign up at https://garu.com.br and create an API key in the dashboard.
 
-## 2. Create a PIX charge
-Use the \`create_pix_charge\` tool with a product UUID and customer info.
+## 2. Find your product
+Use \`list_products\` to see your products and copy the UUID of the one you want to charge.
+Use \`get_product\` to inspect a single product (price, payment methods, etc.).
 
-## 3. Check charge status
+## 3. Create a PIX charge
+Use the \`create_pix_charge\` tool with the product UUID from step 2 and customer info.
+
+## 4. Check charge status
 Use \`get_charge\` with the charge ID to check payment status.
 
-## 4. List your charges
+## 5. List your charges
 Use \`list_charges\` to see all charges with optional filters.
 
 ## Payment methods

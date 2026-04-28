@@ -6,6 +6,7 @@ import { registerPrompts } from "./prompts/payments.js";
 import { registerResources } from "./resources/docs.js";
 import { registerChargeTools } from "./tools/charges.js";
 import { registerCustomerTools } from "./tools/customers.js";
+import { registerProductTools } from "./tools/products.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -33,7 +34,8 @@ export function createServer(options: CreateServerOptions): McpServer {
         prompts: {},
       },
       instructions:
-        "Garu is a Brazilian payment gateway. Use the charge tools to create PIX or boleto payments. " +
+        "Garu is a Brazilian payment gateway. Use list_products / get_product to discover the " +
+        "product UUIDs you'll need for charge creation. Use the charge tools to create PIX or boleto payments. " +
         "Use customer tools to manage your customer base. All monetary values are in BRL (Brazilian Real). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify.",
     },
@@ -41,6 +43,7 @@ export function createServer(options: CreateServerOptions): McpServer {
 
   registerChargeTools(server, garu);
   registerCustomerTools(server, garu);
+  registerProductTools(server, garu);
   registerResources(server);
   registerPrompts(server);
 
