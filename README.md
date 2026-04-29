@@ -22,7 +22,7 @@ Create a Garu account and get your API key at [garu.com.br](https://garu.com.br)
 ### Claude Code
 
 ```bash
-claude mcp add garu -e GARU_API_KEY=sk_live_xxx -- npx -y @garuhq/mcp
+claude mcp add garu -e GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mcp@latest garu-mcp
 ```
 
 ### Cursor
@@ -34,7 +34,7 @@ Open the command palette and choose "Cursor Settings" > "MCP" > "Add new global 
   "mcpServers": {
     "garu": {
       "command": "npx",
-      "args": ["-y", "@garuhq/mcp"],
+      "args": ["-y", "--package=@garuhq/mcp@latest", "garu-mcp"],
       "env": {
         "GARU_API_KEY": "sk_live_xxx"
       }
@@ -52,7 +52,7 @@ Add to `.windsurf/mcp.json`:
   "mcpServers": {
     "garu": {
       "command": "npx",
-      "args": ["-y", "@garuhq/mcp"],
+      "args": ["-y", "--package=@garuhq/mcp@latest", "garu-mcp"],
       "env": {
         "GARU_API_KEY": "sk_live_xxx"
       }
@@ -70,7 +70,7 @@ Add to `.vscode/mcp.json`:
   "mcpServers": {
     "garu": {
       "command": "npx",
-      "args": ["-y", "@garuhq/mcp"],
+      "args": ["-y", "--package=@garuhq/mcp@latest", "garu-mcp"],
       "env": {
         "GARU_API_KEY": "sk_live_xxx"
       }
@@ -88,7 +88,7 @@ Open Claude Desktop settings > "Developer" tab > "Edit Config".
   "mcpServers": {
     "garu": {
       "command": "npx",
-      "args": ["-y", "@garuhq/mcp"],
+      "args": ["-y", "--package=@garuhq/mcp@latest", "garu-mcp"],
       "env": {
         "GARU_API_KEY": "sk_live_xxx"
       }
@@ -100,7 +100,7 @@ Open Claude Desktop settings > "Developer" tab > "Edit Config".
 ### Codex
 
 ```bash
-codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y @garuhq/mcp
+codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mcp@latest garu-mcp
 ```
 
 ## Tools
