@@ -3,15 +3,19 @@ import { describe, expect, it } from "vitest";
 import { setupServer } from "./helpers.js";
 
 describe("server", () => {
-  it("exposes 12 tools total (5 charge + 5 customer + 2 product)", async () => {
+  it("exposes 13 tools total (5 charge + 6 customer + 2 product)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const tools = await client.listTools();
-    expect(tools.tools).toHaveLength(12);
+    expect(tools.tools).toHaveLength(13);
     const names = tools.tools.map((t) => t.name);
     expect(names).toContain("list_products");
     expect(names).toContain("get_product");
+    expect(names).toContain("set_customer_billing_email_override");
 
     await client.close();
     await server.close();
@@ -19,7 +23,10 @@ describe("server", () => {
 
   it("exposes resources", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const resources = await client.listResources();
     const uris = resources.resources.map((r) => r.uri);
@@ -32,7 +39,10 @@ describe("server", () => {
 
   it("quickstart resource returns markdown", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.readResource({ uri: "garu://docs/quickstart" });
     const text = result.contents[0];
@@ -45,7 +55,10 @@ describe("server", () => {
 
   it("exposes prompts", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const prompts = await client.listPrompts();
     const names = prompts.prompts.map((p) => p.name);
