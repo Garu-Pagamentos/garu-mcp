@@ -1,4 +1,8 @@
-import type { Garu, CreateCustomerParams, UpdateCustomerParams } from "@garuhq/node";
+import type {
+  Garu,
+  CreateCustomerParams,
+  UpdateCustomerParams,
+} from "@garuhq/node";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { customerSchema, ok, fail } from "./shared.js";
@@ -27,12 +31,25 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     "List customers for the authenticated seller with pagination and search.",
     {
       page: z.number().min(1).optional().describe("Page number, default 1"),
-      limit: z.number().min(1).max(100).optional().describe("Items per page, default 20"),
-      search: z.string().max(255).optional().describe("Search by name, email, or document"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe("Items per page, default 20"),
+      search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Search by name, email, or document"),
     },
     async (args) => {
       try {
-        const params = args as unknown as { page?: number; limit?: number; search?: string };
+        const params = args as unknown as {
+          page?: number;
+          limit?: number;
+          search?: string;
+        };
         const result = await garu.customers.list(params);
         return ok(result);
       } catch (err) {
@@ -74,7 +91,10 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
         .optional()
         .describe("CPF (11 digits) or CNPJ (14 digits)"),
       personType: z.enum(["fisica", "juridica"]).optional(),
-      zipCode: z.string().regex(/^\d{8}$/).optional(),
+      zipCode: z
+        .string()
+        .regex(/^\d{8}$/)
+        .optional(),
       street: z.string().max(255).optional(),
       number: z.string().max(20).optional(),
       complement: z.string().max(255).optional(),
@@ -88,8 +108,37 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     },
     async (args) => {
       try {
-        const { id, ...rest } = args as unknown as { id: number } & UpdateCustomerParams;
+        const { id, ...rest } = args as unknown as {
+          id: number;
+        } & UpdateCustomerParams;
         const customer = await garu.customers.update(id, rest);
+        return ok(customer);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "set_customer_billing_email_override",
+    "Set or clear the per-seller billing email override for a customer. The override is sticky: it takes precedence over the per-seller last-used email and the global customer.email for outbound seller-to-customer emails, and is never auto-overwritten by subsequent payments. Pass null to clear and fall back to the last-used email. Use this when the customer asks for a specific billing address (e.g. financeiro@empresa.com.br) different from the email they used at checkout.",
+    {
+      id: z.number().describe("Customer ID"),
+      billingEmailOverride: z
+        .union([z.string().email().max(255), z.null()])
+        .describe(
+          "Email to set as the override, or null to clear the override.",
+        ),
+    },
+    async (args) => {
+      try {
+        const { id, billingEmailOverride } = args as unknown as {
+          id: number;
+          billingEmailOverride: string | null;
+        };
+        const customer = await garu.customers.setBillingEmailOverride(id, {
+          billingEmailOverride,
+        });
         return ok(customer);
       } catch (err) {
         return fail(err);
