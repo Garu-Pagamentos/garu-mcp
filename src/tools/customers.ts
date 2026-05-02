@@ -28,7 +28,7 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
 
   server.tool(
     "list_customers",
-    "List customers for the authenticated seller with pagination and search.",
+    "List customers for the authenticated seller with pagination, search, and an optional 'overdue' filter that surfaces customers with at least one overdue scheduled charge.",
     {
       page: z.number().min(1).optional().describe("Page number, default 1"),
       limit: z
@@ -42,6 +42,12 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
         .max(255)
         .optional()
         .describe("Search by name, email, or document"),
+      status: z
+        .literal("overdue")
+        .optional()
+        .describe(
+          "Filter to customers with at least one overdue scheduled charge.",
+        ),
     },
     async (args) => {
       try {
@@ -49,6 +55,7 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
           page?: number;
           limit?: number;
           search?: string;
+          status?: "overdue";
         };
         const result = await garu.customers.list(params);
         return ok(result);

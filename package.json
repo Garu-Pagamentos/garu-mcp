@@ -1,6 +1,6 @@
 {
   "name": "@garuhq/mcp",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Garu MCP server — payments for AI agents. PIX, card, boleto.",
   "type": "module",
   "bin": {
@@ -37,7 +37,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@garuhq/node": "0.4.0",
+    "@garuhq/node": "0.5.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "update-notifier": "7.3.1",
     "zod": "3.25.76"
