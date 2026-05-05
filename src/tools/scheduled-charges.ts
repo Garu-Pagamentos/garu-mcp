@@ -1,4 +1,7 @@
 import type {
+  CancelAtPeriodEndScheduledChargeParams,
+  CancelRecurrenceScheduledChargeParams,
+  ChangePaymentMethodScheduledChargeParams,
   CreateScheduledChargeParams,
   Garu,
   ListScheduledChargesParams,
@@ -25,34 +28,79 @@ const STATUSES: [ScheduledChargeStatus, ...ScheduledChargeStatus[]] = [
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-export function registerScheduledChargeTools(server: McpServer, garu: Garu): void {
+export function registerScheduledChargeTools(
+  server: McpServer,
+  garu: Garu,
+): void {
   server.tool(
     "create_scheduled_charge",
-    "Schedule a future charge for an existing customer. Garu emails the customer on the due date with a payment link, and notifies the seller team if it goes overdue. Use list_customers first to find the customerId. Only one_time is supported in this version; recurring lands later. Methods: pix, boleto. Card is not supported here yet (requires customer tokenization).",
+    "Schedule a future charge for an existing customer. Use list_customers first to find the customerId. type='one_time' is the simple case (PIX/Boleto). type='recurring' takes a recurrence config and silent-charges the saved card on every cycle past the first. Card method is recurring-only and requires productId. Optional trialDays (1..365, recurring-only) rebases cycle 1 to today + N days and emits customer.trial_started immediately.",
     {
-      customerId: z.number().describe("Customer ID (must already be linked to the seller)"),
+      customerId: z
+        .number()
+        .describe("Customer ID (must already be linked to the seller)"),
       productId: z
         .number()
         .optional()
-        .describe("Optional product to associate with this charge"),
+        .describe(
+          "Required when methods includes 'card' (Celcoin charges are scoped per product). Optional otherwise.",
+        ),
       amount: z
         .number()
         .positive()
-        .describe("Decimal BRL (e.g. 297.50). Always pass decimals, never centavos."),
+        .describe(
+          "Decimal BRL (e.g. 297.50). Always pass decimals, never centavos.",
+        ),
       description: z
         .string()
         .max(500)
         .optional()
-        .describe("Free-form text shown on the customer email and payment page"),
-      type: z.literal("one_time").describe("Schedule type. Only `one_time` is supported."),
+        .describe(
+          "Free-form text shown on the customer email and payment page",
+        ),
+      type: z
+        .enum(["one_time", "recurring"])
+        .describe(
+          "Schedule type. 'recurring' requires a recurrence block; 'one_time' must omit it.",
+        ),
       dueDate: z
         .string()
         .regex(dateRegex)
         .describe("YYYY-MM-DD in São Paulo time. Must be today or future."),
       methods: z
-        .array(z.enum(["pix", "boleto"]))
+        .array(z.enum(["pix", "boleto", "card"]))
         .min(1)
-        .describe("Payment methods to offer the customer."),
+        .describe(
+          "Payment methods to offer. 'card' is recurring-only and requires productId.",
+        ),
+      recurrence: z
+        .object({
+          interval: z.enum([
+            "weekly",
+            "biweekly",
+            "monthly",
+            "bimonthly",
+            "quarterly",
+            "biannual",
+            "yearly",
+          ]),
+          intervalCount: z.number().int().min(1).optional(),
+          endsAfter: z.number().int().min(1).optional(),
+          endsOn: z.string().regex(dateRegex).optional(),
+        })
+        .optional()
+        .describe(
+          "Cadence for type='recurring'. endsAfter and endsOn are mutually exclusive.",
+        ),
+      trialDays: z
+        .number()
+        .int()
+        .min(1)
+        .max(365)
+        .optional()
+        .describe(
+          "Free-trial duration in days (1..365). Recurring-only. When set, cycle 1 is rebased to today + N days and customer.trial_started fires immediately.",
+        ),
       externalReference: z
         .string()
         .max(255)
@@ -85,7 +133,10 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
         .max(100)
         .optional()
         .describe("Items per page, default 20"),
-      customerId: z.number().optional().describe("Filter by a single customer ID"),
+      customerId: z
+        .number()
+        .optional()
+        .describe("Filter by a single customer ID"),
       status: z
         .union([z.enum(STATUSES), z.array(z.enum(STATUSES)).min(1)])
         .optional()
@@ -149,7 +200,11 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
         .string()
         .regex(dateRegex)
         .describe("YYYY-MM-DD in São Paulo time. Must be today or future."),
-      reason: z.string().max(500).optional().describe("Free-form reason for the audit log"),
+      reason: z
+        .string()
+        .max(500)
+        .optional()
+        .describe("Free-form reason for the audit log"),
     },
     async (args) => {
       try {
@@ -169,7 +224,11 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
     "Pause a scheduled charge. No reminders fire while paused. Allowed from scheduled / due_today / overdue. Use resume_scheduled_charge to bring it back.",
     {
       id: z.string().describe("Scheduled charge ID"),
-      reason: z.string().max(500).optional().describe("Free-form reason for the audit log"),
+      reason: z
+        .string()
+        .max(500)
+        .optional()
+        .describe("Free-form reason for the audit log"),
     },
     async (args) => {
       try {
@@ -203,7 +262,7 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
 
   server.tool(
     "mark_paid_scheduled_charge",
-    "Manually mark a scheduled charge as paid (e.g. customer paid via bank transfer outside Garu). Allowed from due_today / overdue.",
+    "Manually mark a scheduled charge as paid (e.g. customer paid via bank transfer outside Garu). For one-time: omit cycleNumber, allowed from due_today / overdue. For recurring: pass cycleNumber, allowed from cycle status due_today / overdue / failed; future cycles continue.",
     {
       id: z.string().describe("Scheduled charge ID"),
       paymentDate: z
@@ -214,7 +273,17 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
         .string()
         .max(255)
         .optional()
-        .describe("Bank reference, internal ID, or any stable string for reconciliation."),
+        .describe(
+          "Bank reference, internal ID, or any stable string for reconciliation.",
+        ),
+      cycleNumber: z
+        .number()
+        .int()
+        .min(1)
+        .optional()
+        .describe(
+          "Cycle to mark paid. REQUIRED for recurring schedules; omit for one-time.",
+        ),
     },
     async (args) => {
       try {
@@ -222,6 +291,103 @@ export function registerScheduledChargeTools(server: McpServer, garu: Garu): voi
           id: string;
         } & MarkPaidScheduledChargeParams;
         const charge = await garu.scheduledCharges.markPaid(id, rest);
+        return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "cancel_recurrence_scheduled_charge",
+    "Stop future cycles for a recurring scheduled charge. The currently in-flight cycle (if any) remains active until paid, postponed, or marked-paid; only after that resolves does the series flip to recurrence_canceled. Final — use a new series to restart. Recurring-only.",
+    {
+      id: z.string().describe("Scheduled charge ID"),
+      reason: z
+        .string()
+        .max(500)
+        .optional()
+        .describe("Free-form reason for the audit log"),
+    },
+    async (args) => {
+      try {
+        const { id, ...rest } = args as unknown as {
+          id: string;
+        } & CancelRecurrenceScheduledChargeParams;
+        const charge = await garu.scheduledCharges.cancelRecurrence(id, rest);
+        return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "set_cancel_at_period_end_scheduled_charge",
+    "Toggle Stripe-style soft cancel on a recurring series. With enabled=true, the cycle generator stops emitting new cycles after the next paid cycle (the in-flight cycle still bills + can be paid). Reversible by passing enabled=false. Mutually exclusive with recurrence.endsAfter and recurrence.endsOn.",
+    {
+      id: z.string().describe("Scheduled charge ID"),
+      enabled: z
+        .boolean()
+        .describe(
+          "true enables soft-cancel (series ends after the next paid cycle); false clears the flag.",
+        ),
+    },
+    async (args) => {
+      try {
+        const { id, ...rest } = args as unknown as {
+          id: string;
+        } & CancelAtPeriodEndScheduledChargeParams;
+        const charge = await garu.scheduledCharges.setCancelAtPeriodEnd(
+          id,
+          rest,
+        );
+        return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "change_scheduled_charge_payment_method",
+    "Swap the saved card on a recurring series. The new PaymentMethod must belong to the same customerId. Future cycles silent-charge the new card; the in-flight cycle is not retroactively rebound.",
+    {
+      id: z.string().describe("Scheduled charge ID"),
+      paymentMethodId: z
+        .number()
+        .int()
+        .min(1)
+        .describe(
+          "PaymentMethod id to bind. Must belong to the same customerId.",
+        ),
+    },
+    async (args) => {
+      try {
+        const { id, ...rest } = args as unknown as {
+          id: string;
+        } & ChangePaymentMethodScheduledChargeParams;
+        const charge = await garu.scheduledCharges.changePaymentMethod(
+          id,
+          rest,
+        );
+        return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "clear_scheduled_charge_payment_method",
+    "Clear the saved card on a recurring series. Future cycles fall back to the email-with-link flow so the customer can re-enter card details or pay via PIX/Boleto.",
+    {
+      id: z.string().describe("Scheduled charge ID"),
+    },
+    async (args) => {
+      try {
+        const { id } = args as unknown as { id: string };
+        const charge = await garu.scheduledCharges.clearPaymentMethod(id);
         return ok(charge);
       } catch (err) {
         return fail(err);
