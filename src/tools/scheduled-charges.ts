@@ -4,6 +4,7 @@ import type {
   ChangePaymentMethodScheduledChargeParams,
   CreateScheduledChargeParams,
   Garu,
+  ListScheduledChargeAttemptsParams,
   ListScheduledChargesParams,
   MarkPaidScheduledChargeParams,
   PauseScheduledChargeParams,
@@ -389,6 +390,41 @@ export function registerScheduledChargeTools(
         const { id } = args as unknown as { id: string };
         const charge = await garu.scheduledCharges.clearPaymentMethod(id);
         return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "list_scheduled_charge_attempts",
+    "Per-attempt billing log for a scheduled charge series (SPEC §4.2). One row per logical billing event: cycle 1 interactive charge, every silent-charge attempt, every retry cron retry, every manual mark-paid. Each row carries the canonical Garu failureCode for declines, the gateway raw code for forensics, and a snapshot of the card last4 / brand even after the PaymentMethod is deleted (LGPD survival). Use this to audit why a recurring series fell behind.",
+    {
+      id: z.string().describe("Scheduled charge ID (the series id)"),
+      cycleNumber: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe(
+          "Filter to a single cycle. Default returns attempts across all cycles.",
+        ),
+      page: z.number().int().positive().optional().describe("Default 1"),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe("Default 20, max 100"),
+    },
+    async (args) => {
+      try {
+        const { id, ...rest } = args as unknown as {
+          id: string;
+        } & ListScheduledChargeAttemptsParams;
+        const result = await garu.scheduledCharges.listAttempts(id, rest);
+        return ok(result);
       } catch (err) {
         return fail(err);
       }
