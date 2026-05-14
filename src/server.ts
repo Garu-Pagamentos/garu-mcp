@@ -6,6 +6,7 @@ import { registerPrompts } from "./prompts/payments.js";
 import { registerResources } from "./resources/docs.js";
 import { registerChargeTools } from "./tools/charges.js";
 import { registerCustomerTools } from "./tools/customers.js";
+import { registerIntegrationTools } from "./tools/integration.js";
 import { registerProductTools } from "./tools/products.js";
 import { registerScheduledChargeTools } from "./tools/scheduled-charges.js";
 
@@ -42,7 +43,10 @@ export function createServer(options: CreateServerOptions): McpServer {
         "an existing customer on a future date — Garu emails the customer on the due date and alerts " +
         "the seller team if it goes overdue. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
         "All monetary values are in BRL (Brazilian Real). " +
-        "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify.",
+        "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify. " +
+        "When the user asks how to integrate Garu, set up an API key, or receive webhooks, call " +
+        "get_integration_setup (or read garu://docs/integration-setup) — Garu's API does not expose " +
+        "endpoints for creating API keys or webhooks, both have to be done in the dashboard.",
     },
   );
 
@@ -50,6 +54,7 @@ export function createServer(options: CreateServerOptions): McpServer {
   registerCustomerTools(server, garu);
   registerProductTools(server, garu);
   registerScheduledChargeTools(server, garu);
+  registerIntegrationTools(server, garu);
   registerResources(server);
   registerPrompts(server);
 

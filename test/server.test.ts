@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { setupServer } from "./helpers.js";
 
 describe("server", () => {
-  it("exposes 28 tools total (5 charge + 6 customer + 5 product + 12 scheduled-charge)", async () => {
+  it("exposes 29 tools total (5 charge + 6 customer + 5 product + 12 scheduled-charge + 1 integration)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -11,12 +11,13 @@ describe("server", () => {
     ]);
 
     const tools = await client.listTools();
-    expect(tools.tools).toHaveLength(28);
+    expect(tools.tools).toHaveLength(29);
     const names = tools.tools.map((t) => t.name);
     expect(names).toContain("list_products");
     expect(names).toContain("get_product");
     expect(names).toContain("set_customer_billing_email_override");
     expect(names).toContain("create_scheduled_charge");
+    expect(names).toContain("get_integration_setup");
 
     await client.close();
     await server.close();
@@ -33,6 +34,7 @@ describe("server", () => {
     const uris = resources.resources.map((r) => r.uri);
     expect(uris).toContain("garu://docs/quickstart");
     expect(uris).toContain("garu://docs/openapi");
+    expect(uris).toContain("garu://docs/integration-setup");
 
     await client.close();
     await server.close();
@@ -65,6 +67,7 @@ describe("server", () => {
     const names = prompts.prompts.map((p) => p.name);
     expect(names).toContain("create_pix_charge");
     expect(names).toContain("list_recent_charges");
+    expect(names).toContain("setup_integration");
 
     await client.close();
     await server.close();

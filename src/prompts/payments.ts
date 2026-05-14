@@ -36,4 +36,28 @@ export function registerPrompts(server: McpServer): void {
       };
     },
   );
+
+  server.prompt(
+    "setup_integration",
+    "Guiar a configuração da integração com a Garu (API key + webhook)",
+    async () => {
+      return {
+        messages: [
+          {
+            role: "user" as const,
+            content: {
+              type: "text" as const,
+              text:
+                "Quero integrar minha aplicação com a Garu. " +
+                "Use a ferramenta get_integration_setup (ou leia o recurso garu://docs/integration-setup) " +
+                "para listar, em passos numerados, como criar a chave de API em " +
+                "https://garu.com.br/configuracoes/desenvolvedores e como cadastrar um webhook + segredo de assinatura. " +
+                "Em seguida, pergunte se a aplicação já recebe webhooks; se não, mostre o exemplo em Node.js " +
+                "usando Garu.webhooks.verify e oriente onde colocar GARU_API_KEY e GARU_WEBHOOK_SECRET.",
+            },
+          },
+        ],
+      };
+    },
+  );
 }
