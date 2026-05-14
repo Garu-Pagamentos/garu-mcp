@@ -5,6 +5,35 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.9.0] — 2026-05-14
+
+### Added
+
+- New integration-setup surface so agents can discover how to wire an
+  app to Garu. Garu's API does not expose programmatic endpoints to
+  create API keys or webhooks — both have to be configured in the
+  dashboard at https://garu.com.br/configuracoes/desenvolvedores, and
+  this release documents that path through every MCP affordance:
+  - `get_integration_setup` tool — returns a structured payload with
+    the dashboard URL, env var conventions (`GARU_API_KEY`,
+    `GARU_WEBHOOK_SECRET`), step-by-step instructions for the API key
+    and the webhook + signing secret, and a Node.js verification
+    example using `Garu.webhooks.verify({ payload, signature, secret })`
+    where `signature` is the raw `X-Garu-Signature` header value.
+  - `garu://docs/integration-setup` resource — bilingual (English +
+    Brazilian Portuguese) markdown guide with the same Node snippet.
+  - `setup_integration` prompt — PT-BR prompt that routes the agent
+    through the tool and walks the user through env-var placement.
+- Quickstart resource (`garu://docs/quickstart`) now links to the
+  developers dashboard and includes a `receive webhooks` step.
+- Server `instructions` updated so agents reach for
+  `get_integration_setup` when the user asks how to integrate Garu, set
+  up an API key, or receive webhooks.
+
+### Changed
+
+- Tool count: 28 → 29.
+
 ## [0.5.0] — 2026-05-02
 
 ### Added
