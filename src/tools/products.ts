@@ -92,6 +92,18 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     },
   );
 
+  const productIdSchema = z
+    .union([
+      z.string().uuid(),
+      z.string().regex(/^\d+$/, "Must be a UUID or a positive integer string"),
+      z.number().int().positive(),
+    ])
+    .describe(
+      "Product identifier — accepts the UUID (preferred — same id returned by " +
+        "list_products and webhook payloads) or the legacy positive integer id. " +
+        "UUID support added in Garu v0.10.0.",
+    );
+
   server.tool(
     "get_product_portal_config",
     "Get the per-product portal customization (business name, logo, primary color, " +
@@ -100,17 +112,11 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
       "the seller-level portal config. Used by B2B2C platforms that model their " +
       "professionals/coaches as Products under a single seller.",
     {
-      productId: z
-        .number()
-        .int()
-        .positive()
-        .describe(
-          "Numeric product id (NOT the UUID — get it from list_products).",
-        ),
+      productId: productIdSchema,
     },
     async (args) => {
       try {
-        const { productId } = args as unknown as { productId: number };
+        const { productId } = args as unknown as { productId: string | number };
         const cfg = await garu.products.portalConfig.get(productId);
         return ok(cfg);
       } catch (err) {
@@ -127,17 +133,13 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
       "(DELETE) to reset everything. Each Boolean / string field can be passed as null " +
       "to inherit from the seller-level config.",
     {
-      productId: z
-        .number()
-        .int()
-        .positive()
-        .describe("Numeric product id (NOT the UUID)."),
+      productId: productIdSchema,
       ...portalConfigShape,
     },
     async (args) => {
       try {
         const { productId, ...rest } = args as unknown as {
-          productId: number;
+          productId: string | number;
         } & SetProductPortalConfigParams;
         const cfg = await garu.products.portalConfig.set(productId, rest);
         return ok(cfg);
@@ -153,15 +155,11 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
       "seller-level portal config. Returns { removed: true } when a row was " +
       "deleted, { removed: false } when there was nothing to remove.",
     {
-      productId: z
-        .number()
-        .int()
-        .positive()
-        .describe("Numeric product id (NOT the UUID)."),
+      productId: productIdSchema,
     },
     async (args) => {
       try {
-        const { productId } = args as unknown as { productId: number };
+        const { productId } = args as unknown as { productId: string | number };
         const result = await garu.products.portalConfig.clear(productId);
         return ok(result);
       } catch (err) {

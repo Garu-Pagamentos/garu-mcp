@@ -111,10 +111,12 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 |------|-------------|
 | `list_products` | List your seller's products with pagination and search |
 | `get_product` | Get a single product by UUID — the identifier accepted by the charge tools |
-| `get_product_portal_config` | Read per-product portal customization (B2B2C, v0.8.0). Returns `null` if unset — product falls back to seller-level config |
+| `get_product_portal_config` | Read per-product portal customization (B2B2C). Returns `null` if unset — product falls back to seller-level config |
 | `set_product_portal_config` | Upsert with merge: only fields provided are written. Pass `null` on a field to inherit from seller |
 | `clear_product_portal_config` | Remove the per-product config; product falls back to seller-level config |
 
+> Portal-config tools accept `productId` as either the product UUID (preferred — same id returned by `list_products`) or the legacy numeric id. UUID support added in Garu v0.10.0.
+>
 > Use `list_products` to discover the UUID you'll pass to `create_pix_charge` or `create_boleto_charge`.
 >
 > Per-product portal config is the **B2B2C primitive**: SaaS that models professionals/coaches/instructors as Products under one Seller can give each one custom branding (`businessName`, `primaryColor`, `logoUrl`) and policies on the customer payment page + `/minha-area` portal — all without fragmenting the seller's accounting.
