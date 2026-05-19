@@ -5,6 +5,38 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.12.0] — 2026-05-19
+
+### Added
+
+- `resend_webhook_event` tool — `POST /api/webhook-events/{id}/resend`.
+  Audit-trail-preserving counterpart to `retry_webhook_event`: instead
+  of mutating the original event in place, the gateway inserts a fresh
+  event (new numeric id) that points back at the source via
+  `manualResendOf`, then dispatches that clone. The original row's prior
+  response status/body is left untouched on the record. Returns the
+  clone's id. Customer handlers see `Idempotency-Key: resend_<original-id>`
+  on the delivery and can distinguish a resend from the original by that
+  prefix or by reading `manualResendOf` on the payload. Works on any
+  source status (`success` / `failed` / `pending`). Requires
+  `@garuhq/node` 0.12.0+.
+
+### Changed
+
+- `retry_webhook_event` description soft-deprecates the tool in favor of
+  `resend_webhook_event`. The MCP tool is still registered for callers
+  that want the legacy in-place semantics; agents are now steered toward
+  resend for the canonical "customer says they didn't get event X"
+  workflow because retry overwrites the historical response on the source
+  row.
+- Server `instructions` updated to list
+  `(list_webhook_events, get_webhook_event, resend_webhook_event)` as the
+  primary audit/replay surface, with retry called out as the fallback for
+  the legacy in-place behavior.
+- Tool count: 32 → 33.
+- Bumped `@garuhq/node` from `0.11.1` to `0.12.0` for the new
+  `webhookEvents.resend()` method.
+
 ## [0.11.1] — 2026-05-19
 
 ### Fixed

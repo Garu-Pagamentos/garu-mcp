@@ -45,8 +45,12 @@ export function createServer(options: CreateServerOptions): McpServer {
         "the seller team if it goes overdue. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
         "All monetary values are in BRL (Brazilian Real). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify. " +
-        "Use the webhook-event tools (list_webhook_events, get_webhook_event, retry_webhook_event) " +
+        "Use the webhook-event tools (list_webhook_events, get_webhook_event, resend_webhook_event) " +
         "to audit and replay deliveries when a customer reports a missed or unprocessed event. " +
+        "Prefer resend_webhook_event — it clones the original event so the prior delivery's audit " +
+        "trail (status, response body) stays intact; the customer's handler sees " +
+        "Idempotency-Key: resend_<original-id> on the new delivery. Only reach for retry_webhook_event " +
+        "if the caller explicitly wants the legacy in-place semantics (mutates the source row). " +
         "When the user asks how to integrate Garu, set up an API key, or create a webhook endpoint, " +
         "call get_integration_setup (or read garu://docs/integration-setup) — webhook endpoint " +
         "creation (URL, subscribed events, secret) is still dashboard-only, but webhook event " +

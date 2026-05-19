@@ -7,7 +7,7 @@ function textContent(result: { content: unknown }): string {
 }
 
 describe("webhook-event tools", () => {
-  it("registers list_webhook_events, get_webhook_event, retry_webhook_event", async () => {
+  it("registers list_webhook_events, get_webhook_event, retry_webhook_event, resend_webhook_event", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -20,6 +20,7 @@ describe("webhook-event tools", () => {
     expect(names).toContain("list_webhook_events");
     expect(names).toContain("get_webhook_event");
     expect(names).toContain("retry_webhook_event");
+    expect(names).toContain("resend_webhook_event");
 
     await client.close();
     await server.close();
@@ -146,7 +147,7 @@ describe("webhook-event tools", () => {
     }
   });
 
-  it("retry_webhook_event tool description names the use case", async () => {
+  it("retry_webhook_event description points agents at resend_webhook_event for the common path", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -156,11 +157,98 @@ describe("webhook-event tools", () => {
     const tools = await client.listTools();
     const retry = tools.tools.find((t) => t.name === "retry_webhook_event");
     expect(retry).toBeDefined();
-    // The description is what tells the agent when to reach for this tool;
-    // assert the canonical phrase survives future refactors.
-    expect(retry!.description).toMatch(/missed|unprocessed/i);
+    // retry_webhook_event is soft-deprecated in favor of resend_webhook_event;
+    // pin the redirection so the soft-deprecation doesn't silently drop out
+    // of the description.
+    expect(retry!.description).toMatch(/resend_webhook_event/);
 
     await client.close();
     await server.close();
+  });
+
+  it("resend_webhook_event description names the audit-trail-preserving behavior and idempotency key", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const tools = await client.listTools();
+    const resend = tools.tools.find((t) => t.name === "resend_webhook_event");
+    expect(resend).toBeDefined();
+    // Agents pick between retry and resend based on these phrases — pin them.
+    expect(resend!.description).toMatch(/missed|unprocessed/i);
+    expect(resend!.description).toMatch(/clone|preserv/i);
+    expect(resend!.description).toMatch(/Idempotency-Key: resend_/);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("resend_webhook_event rejects a non-positive id", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const result = await client.callTool({
+      name: "resend_webhook_event",
+      arguments: { id: 0 },
+    });
+
+    expect(result.isError).toBe(true);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("resend_webhook_event POSTs to /resend and returns the cloned event", async () => {
+    // Pins the wire route: a regression that points this at /retry would
+    // silently mutate the original event instead of cloning, losing the
+    // audit trail this tool exists to protect.
+    const fetchStub = vi.fn(async (input: string | URL | Request) => {
+      return new Response(
+        JSON.stringify({
+          id: 100,
+          status: "pending",
+          manualResendOf: 42,
+          eventType: "transaction.payment.paid",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchStub as unknown as typeof globalThis.fetch;
+    try {
+      const { server, client, clientTransport, serverTransport } = setupServer();
+      await Promise.all([
+        server.connect(serverTransport),
+        client.connect(clientTransport),
+      ]);
+
+      const result = await client.callTool({
+        name: "resend_webhook_event",
+        arguments: { id: 42 },
+      });
+
+      expect(result.isError).toBeFalsy();
+      expect(fetchStub).toHaveBeenCalledTimes(1);
+      const firstCallArg = fetchStub.mock.calls[0]![0];
+      const url =
+        firstCallArg instanceof Request
+          ? firstCallArg.url
+          : String(firstCallArg);
+      expect(url).toContain("/api/webhook-events/42/resend");
+
+      const body = textContent(result);
+      expect(body).toContain('"id": 100');
+      expect(body).toContain('"manualResendOf": 42');
+
+      await client.close();
+      await server.close();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
