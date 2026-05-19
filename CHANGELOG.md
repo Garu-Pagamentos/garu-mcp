@@ -5,6 +5,16 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.11.1] — 2026-05-19
+
+### Fixed
+
+- Bump `@garuhq/node` to `0.11.1` to pick up the empty-body POST fix.
+  The `retry_webhook_event` and `resume_scheduled_charge` tools were
+  failing against production with `Body cannot be empty when content-type
+  is set to 'application/json'`. The SDK now sends an explicit `{}` body
+  on every otherwise-empty mutation.
+
 ## [0.11.0] — 2026-05-19
 
 ### Added
