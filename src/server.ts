@@ -9,6 +9,7 @@ import { registerCustomerTools } from "./tools/customers.js";
 import { registerIntegrationTools } from "./tools/integration.js";
 import { registerProductTools } from "./tools/products.js";
 import { registerScheduledChargeTools } from "./tools/scheduled-charges.js";
+import { registerWebhookEventTools } from "./tools/webhook-events.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -44,9 +45,12 @@ export function createServer(options: CreateServerOptions): McpServer {
         "the seller team if it goes overdue. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
         "All monetary values are in BRL (Brazilian Real). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify. " +
-        "When the user asks how to integrate Garu, set up an API key, or receive webhooks, call " +
-        "get_integration_setup (or read garu://docs/integration-setup) — Garu's API does not expose " +
-        "endpoints for creating API keys or webhooks, both have to be done in the dashboard.",
+        "Use the webhook-event tools (list_webhook_events, get_webhook_event, retry_webhook_event) " +
+        "to audit and replay deliveries when a customer reports a missed or unprocessed event. " +
+        "When the user asks how to integrate Garu, set up an API key, or create a webhook endpoint, " +
+        "call get_integration_setup (or read garu://docs/integration-setup) — webhook endpoint " +
+        "creation (URL, subscribed events, secret) is still dashboard-only, but webhook event " +
+        "listing and retry are available via the tools above.",
     },
   );
 
@@ -54,6 +58,7 @@ export function createServer(options: CreateServerOptions): McpServer {
   registerCustomerTools(server, garu);
   registerProductTools(server, garu);
   registerScheduledChargeTools(server, garu);
+  registerWebhookEventTools(server, garu);
   registerIntegrationTools(server, garu);
   registerResources(server);
   registerPrompts(server);

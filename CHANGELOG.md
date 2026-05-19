@@ -5,6 +5,32 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.11.0] — 2026-05-19
+
+### Added
+
+- Three new tools mirroring the `garu.webhookEvents.*` SDK methods
+  (requires `@garuhq/node` 0.11.0+). Agents can now audit and replay
+  webhook deliveries — the canonical "a customer says they didn't get
+  event X, resend it" workflow.
+  - `list_webhook_events` — `GET /api/webhook-events`. Filter by
+    `status` (`pending` / `success` / `failed`), Garu event type, or
+    destination endpoint id.
+  - `get_webhook_event` — `GET /api/webhook-events/{id}`. Returns the
+    full payload, the embedded endpoint snapshot, and the most recent
+    response status/body.
+  - `retry_webhook_event` — `POST /api/webhook-events/{id}/retry`.
+    Resets the event to `pending` and triggers an immediate delivery
+    attempt. Works on any status.
+- Server `instructions` updated so agents reach for these tools when a
+  user mentions a missed, failed, or unprocessed webhook event. The
+  caveat that webhook endpoint *creation* (URL, subscribed events,
+  secret) is still dashboard-only is preserved.
+
+### Changed
+
+- Tool count: 29 → 32.
+
 ## [0.9.0] — 2026-05-14
 
 ### Added
