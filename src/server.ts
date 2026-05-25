@@ -42,7 +42,9 @@ export function createServer(options: CreateServerOptions): McpServer {
         "Use customer tools to manage your customer base. " +
         "Use scheduled-charge tools (create_scheduled_charge, list_scheduled_charges, etc.) to bill " +
         "an existing customer on a future date — Garu emails the customer on the due date and alerts " +
-        "the seller team if it goes overdue. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
+        "the seller team if it goes overdue. To bill a scheduled charge immediately instead of waiting " +
+        "for its due date, use charge_now_scheduled_charge — it is idempotent (reports already_sent " +
+        "rather than re-charging) so it is safe to retry. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
         "All monetary values are in BRL (Brazilian Real). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify. " +
         "Use the webhook-event tools (list_webhook_events, get_webhook_event, resend_webhook_event) " +

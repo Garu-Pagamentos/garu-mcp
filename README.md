@@ -142,16 +142,17 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 | `delete_customer` | Remove customer from your seller account |
 | `set_customer_billing_email_override` | Override the billing-email used for that customer |
 
-### Scheduled charges (12 tools)
+### Scheduled charges (13 tools)
 
 Bill an existing customer on a future date — one-time or recurring with card tokenization.
 
 | Tool | Description |
 |------|-------------|
-| `create_scheduled_charge` | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+ |
+| `create_scheduled_charge` | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+. Optional `maxRecoveryDays` (1–365) caps how long past `dueDate` the recovery sweep keeps auto-billing a missed charge (default 14) |
 | `list_scheduled_charges` | Paginated list with filters by status, type, due-date range, customer |
 | `get_scheduled_charge` | Detail bundle: charge + event timeline + linked transactions |
 | `mark_paid_scheduled_charge` | Mark a cycle paid (off-Garu reconciliation) |
+| `charge_now_scheduled_charge` | Force-bill the current cycle now instead of waiting for the due date (same dispatch as the daily cron). Idempotent — reports `already_sent` rather than re-charging |
 | `postpone_scheduled_charge` | Move next due date forward |
 | `pause_scheduled_charge` / `resume_scheduled_charge` | Suspend / re-enable a series |
 | `cancel_recurrence_scheduled_charge` | Hard-stop future cycles (recurring only) |

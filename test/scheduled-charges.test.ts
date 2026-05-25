@@ -21,6 +21,7 @@ describe("scheduled-charge tools", () => {
     expect(names).toContain("pause_scheduled_charge");
     expect(names).toContain("resume_scheduled_charge");
     expect(names).toContain("mark_paid_scheduled_charge");
+    expect(names).toContain("charge_now_scheduled_charge");
 
     await client.close();
     await server.close();
@@ -85,6 +86,44 @@ describe("scheduled-charge tools", () => {
     });
 
     expect(result.isError).toBe(true);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("create_scheduled_charge rejects out-of-range maxRecoveryDays", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "create_scheduled_charge",
+      arguments: {
+        customerId: 1,
+        amount: 100,
+        type: "one_time",
+        dueDate: "2026-06-15",
+        methods: ["pix"],
+        maxRecoveryDays: 400,
+      },
+    });
+
+    expect(result.isError).toBe(true);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("charge_now_scheduled_charge surfaces network errors gracefully", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "charge_now_scheduled_charge",
+      arguments: { id: "sch_does_not_exist" },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(errorText(result)).toMatch(/^Error: /);
 
     await client.close();
     await server.close();

@@ -102,6 +102,15 @@ export function registerScheduledChargeTools(
         .describe(
           "Free-trial duration in days (1..365). Recurring-only. When set, cycle 1 is rebased to today + N days and customer.trial_started fires immediately.",
         ),
+      maxRecoveryDays: z
+        .number()
+        .int()
+        .min(1)
+        .max(365)
+        .optional()
+        .describe(
+          "Max days past dueDate the daily recovery sweep will still auto-bill a missed charge (1..365). Omit for the system default (14).",
+        ),
       externalReference: z
         .string()
         .max(255)
@@ -293,6 +302,23 @@ export function registerScheduledChargeTools(
         } & MarkPaidScheduledChargeParams;
         const charge = await garu.scheduledCharges.markPaid(id, rest);
         return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "charge_now_scheduled_charge",
+    "Force-bill the current cycle right now instead of waiting for its due date. Runs the same dispatch the daily billing cron would: customer email/notification + outbound webhook + timeline event. Allowed only from a billable status (scheduled / due_today); a recurring series must also have an open cycle (otherwise the gateway returns 400). IDEMPOTENT — NOT a re-charge: if this cycle's d-day was already dispatched it reports outcome 'already_sent' and does nothing, so retries are safe and never double-bill. Read the returned outcome ('dispatched' | 'already_sent' | 'not_sent' | 'failed'), the optional reason (e.g. no_email, no_saved_payment_method, card_expired, or a gateway decline code), and the pt-BR message to decide what to tell the user.",
+    {
+      id: z.string().describe("Scheduled charge ID"),
+    },
+    async (args) => {
+      try {
+        const { id } = args as unknown as { id: string };
+        const result = await garu.scheduledCharges.chargeNow(id);
+        return ok(result);
       } catch (err) {
         return fail(err);
       }

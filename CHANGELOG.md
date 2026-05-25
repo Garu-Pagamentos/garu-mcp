@@ -5,6 +5,35 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.13.0] — 2026-05-25
+
+### Added
+
+- `charge_now_scheduled_charge` tool — `POST /api/scheduled-charges/{id}/charge-now`.
+  Force-bills the current cycle immediately instead of waiting for its due
+  date, running the same dispatch the daily billing cron would (customer
+  email/notification + outbound webhook + timeline event). Allowed only from
+  a billable status (`scheduled` / `due_today`); a recurring series must have
+  an open cycle (otherwise the gateway returns 400). **Idempotent — not a
+  re-charge:** if the current cycle's d-day was already dispatched it reports
+  `outcome: 'already_sent'` and does nothing, so retries never double-bill.
+  The result carries `outcome` (`dispatched` / `already_sent` / `not_sent` /
+  `failed`), `cycleNumber`, an optional `reason` (e.g. `no_email`,
+  `no_saved_payment_method`, `card_expired`, or a gateway decline code), and a
+  ready-to-show pt-BR `message`. Requires `@garuhq/node` 0.13.0+.
+
+### Changed
+
+- `create_scheduled_charge` accepts an optional `maxRecoveryDays` (integer
+  1–365) — the maximum number of days past `dueDate` the daily recovery sweep
+  will still auto-bill a missed charge. Omit it for the system default (14).
+  Also surfaced on the returned object as `maxRecoveryDays: number | null`.
+- Server `instructions` now point agents at `charge_now_scheduled_charge` for
+  immediate billing and call out its idempotency.
+- Tool count: 33 → 34.
+- Bumped `@garuhq/node` from `0.12.0` to `0.13.0` for the new
+  `scheduledCharges.chargeNow()` method and `maxRecoveryDays` create field.
+
 ## [0.12.0] — 2026-05-19
 
 ### Added
