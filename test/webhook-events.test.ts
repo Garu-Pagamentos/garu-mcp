@@ -87,7 +87,7 @@ describe("webhook-event tools", () => {
     // `endpointId` (camelCase) → SDK puts them back to snake_case on the wire.
     // A regression at any link breaks customer queries silently (empty list
     // instead of an error), so this test pins all three forms in one shot.
-    const fetchStub = vi.fn(async (input: string | URL | Request) => {
+    const fetchStub = vi.fn(async (_input: string | URL | Request) => {
       return new Response(
         JSON.stringify({
           events: [
@@ -207,7 +207,7 @@ describe("webhook-event tools", () => {
     // Pins the wire route: a regression that points this at /retry would
     // silently mutate the original event instead of cloning, losing the
     // audit trail this tool exists to protect.
-    const fetchStub = vi.fn(async (input: string | URL | Request) => {
+    const fetchStub = vi.fn(async (_input: string | URL | Request) => {
       return new Response(
         JSON.stringify({
           id: 100,

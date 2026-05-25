@@ -1,4 +1,4 @@
-import type { Garu, CreateChargeParams, Customer } from "@garuhq/node";
+import type { Garu, Customer } from "@garuhq/node";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { customerSchema, ok, fail } from "./shared.js";
