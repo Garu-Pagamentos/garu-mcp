@@ -91,3 +91,74 @@ describe("product portal-config productId schema", () => {
     await server.close();
   });
 });
+
+describe("create_product", () => {
+  it("passes a valid product past the schema to the HTTP layer", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "create_product",
+      arguments: { name: "Plano Pro", value: 2990, pixAutomatic: true },
+    });
+
+    expect(result.isError).toBe(true);
+    // Past the schema — auth fails on the fake key, proving the input was accepted.
+    expect(errorText(result)).toBe("Error: Invalid API key");
+
+    await client.close();
+    await server.close();
+  });
+
+  it("rejects a create with no name at the schema boundary", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "create_product",
+      arguments: { value: 2990 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(errorText(result)).not.toBe("Error: Invalid API key");
+
+    await client.close();
+    await server.close();
+  });
+});
+
+describe("update_product", () => {
+  it("passes a partial update past the schema to the HTTP layer", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "update_product",
+      arguments: { productId: 57, value: 4990 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(errorText(result)).toBe("Error: Invalid API key");
+
+    await client.close();
+    await server.close();
+  });
+
+  it("rejects an update with zero write fields before reaching the HTTP layer", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "update_product",
+      arguments: { productId: 57 },
+    });
+
+    expect(result.isError).toBe(true);
+    const text = errorText(result);
+    expect(text).not.toBe("Error: Invalid API key");
+    expect(text).toContain("one or more write fields");
+
+    await client.close();
+    await server.close();
+  });
+});

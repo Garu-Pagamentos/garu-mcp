@@ -1,4 +1,9 @@
-import type { Garu, SetProductPortalConfigParams } from "@garuhq/node";
+import type {
+  CreateProductParams,
+  Garu,
+  SetProductPortalConfigParams,
+  UpdateProductParams,
+} from "@garuhq/node";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ok, fail } from "./shared.js";
@@ -123,6 +128,142 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
         const { productId } = args as unknown as { productId: string | number };
         const cfg = await garu.products.portalConfig.get(productId);
         return ok(cfg);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  const productWriteShape = {
+    name: z.string().max(255).optional().describe("Product name."),
+    value: z
+      .number()
+      .int()
+      .nonnegative()
+      .optional()
+      .describe(
+        "Price in centavos — BRL × 100 (e.g. R$29.90 → 2990). Products store " +
+          "the price in centavos, unlike scheduled charges which take decimal BRL.",
+      ),
+    description: z.string().max(2000).optional().describe("Product description."),
+    image: z
+      .string()
+      .url()
+      .max(500)
+      .optional()
+      .describe("HTTPS URL of the product cover image."),
+    tags: z.array(z.string().max(64)).optional().describe("Free-form tags."),
+    pix: z.boolean().optional().describe("Offer PIX at checkout."),
+    boleto: z.boolean().optional().describe("Offer Boleto at checkout."),
+    creditCard: z.boolean().optional().describe("Offer credit card at checkout."),
+    pixAutomatic: z
+      .boolean()
+      .optional()
+      .describe(
+        "When true, exposes Pix Automático (BACEN auto-debit recurring Pix) on " +
+          "the subscription checkout. Only the subscription checkout mode reads it.",
+      ),
+    installments: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Max number of installments offered on credit card."),
+    isSubscription: z
+      .boolean()
+      .optional()
+      .describe("Mark the product as a subscription (recurring)."),
+    subscriptionType: z
+      .string()
+      .max(64)
+      .optional()
+      .describe("Subscription cadence label (e.g. 'monthly')."),
+    unitLabel: z
+      .string()
+      .max(64)
+      .optional()
+      .describe("Per-unit label shown on the checkout (e.g. 'seat')."),
+    returnUrl: z
+      .string()
+      .url()
+      .max(500)
+      .optional()
+      .describe("URL the buyer returns to after a successful payment."),
+    returnUrlButtonText: z
+      .string()
+      .max(120)
+      .optional()
+      .describe("Label for the return-URL button on the success page."),
+    statementDescriptor: z
+      .string()
+      .max(120)
+      .optional()
+      .describe("Text shown on the buyer's card/bank statement."),
+  };
+
+  server.tool(
+    "create_product",
+    "Create a product for the authenticated seller. Returns the created product, " +
+      "whose UUID is the same identifier accepted by create_pix_charge / " +
+      "create_boleto_charge. value is in centavos (BRL × 100), unlike scheduled " +
+      "charges which take decimal BRL. Setting pixAutomatic: true exposes Pix " +
+      "Automático (BACEN auto-debit recurring Pix) on the subscription checkout. " +
+      "Pass idempotencyKey to make a retry across process restarts safe — the " +
+      "backend returns the original product instead of creating a duplicate.",
+    {
+      ...productWriteShape,
+      name: z.string().max(255).describe("Product name (required)."),
+      idempotencyKey: z
+        .string()
+        .max(255)
+        .optional()
+        .describe(
+          "Idempotency key for safe retries. Defaults to a generated UUIDv4.",
+        ),
+    },
+    async (args) => {
+      try {
+        const params = args as CreateProductParams;
+        const product = await garu.products.create(params);
+        return ok(product);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "update_product",
+    "Update an existing product (partial PATCH — only the fields you provide are " +
+      "written; everything else keeps its persisted value). value is in centavos " +
+      "(BRL × 100). Setting pixAutomatic: true exposes Pix Automático (BACEN " +
+      "auto-debit recurring Pix) on the subscription checkout. At least one write " +
+      "field is required.",
+    {
+      productId: productIdSchema,
+      ...productWriteShape,
+    },
+    async (args) => {
+      try {
+        const { productId, ...rest } = args as {
+          productId: string | number;
+        } & UpdateProductParams;
+        const writeFields = Object.entries(rest).filter(
+          ([, value]) => value !== undefined,
+        );
+        if (writeFields.length === 0) {
+          return fail(
+            new Error(
+              "update_product requires one or more write fields " +
+                "(e.g. name, value, pix, pixAutomatic).",
+            ),
+          );
+        }
+        const product = await garu.products.update(
+          productId,
+          Object.fromEntries(writeFields) as UpdateProductParams,
+        );
+        return ok(product);
       } catch (err) {
         return fail(err);
       }

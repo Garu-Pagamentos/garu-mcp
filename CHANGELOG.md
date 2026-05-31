@@ -5,6 +5,33 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.15.0] — 2026-05-31
+
+### Added
+
+- `create_product` tool — `garu.products.create()`. Creates a product for the
+  authenticated seller and returns it, whose `uuid` is the same identifier
+  accepted by `create_pix_charge` / `create_boleto_charge`. Fields are
+  camelCase: `name` (required), `value` (centavos — BRL × 100, **not** decimal
+  BRL like scheduled charges), `description`, `image` (HTTPS URL), `tags`,
+  `pix` / `boleto` / `creditCard` / `pixAutomatic` booleans, `installments`,
+  `isSubscription`, `subscriptionType`, `unitLabel`, `returnUrl`,
+  `returnUrlButtonText`, `statementDescriptor`, and `idempotencyKey` (safe
+  retries). Setting `pixAutomatic: true` exposes Pix Automático (BACEN
+  auto-debit recurring Pix) on the subscription checkout.
+- `update_product` tool — `garu.products.update(id, params)`. Partial PATCH:
+  `productId` accepts the UUID or the legacy positive integer id; every other
+  field is optional and only the ones you pass are written. An update with zero
+  write fields is rejected before the network call with a clear message.
+
+### Changed
+
+- Tool count: 34 → 36 (5 → 7 product tools).
+- Bumped `@garuhq/node` from `0.13.0` to `0.15.0` for `products.create()` /
+  `products.update()` and the native `pix_automatic` typing on
+  `ScheduledPaymentMethod`. `create_scheduled_charge` now types its params
+  directly instead of casting through `unknown` to forward `pix_automatic`.
+
 ## [0.14.0] — 2026-05-31
 
 ### Added

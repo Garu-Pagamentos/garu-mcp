@@ -123,9 +123,7 @@ export function registerScheduledChargeTools(
     },
     async (args) => {
       try {
-        // @garuhq/node 0.13.0's ScheduledPaymentMethod type predates 'pix_automatic';
-        // the SDK is a thin openapi-fetch passthrough, so the cast forwards the method verbatim.
-        const params = args as unknown as CreateScheduledChargeParams;
+        const params = args as CreateScheduledChargeParams;
         const charge = await garu.scheduledCharges.create(params);
         return ok(charge);
       } catch (err) {
