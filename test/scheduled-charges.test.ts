@@ -27,7 +27,7 @@ describe("scheduled-charge tools", () => {
     await server.close();
   });
 
-  it("create_scheduled_charge rejects type=recurring (not supported in this version)", async () => {
+  it("create_scheduled_charge accepts type=recurring (passes schema, then surfaces SDK error)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
@@ -39,10 +39,12 @@ describe("scheduled-charge tools", () => {
         type: "recurring",
         dueDate: "2026-06-15",
         methods: ["pix"],
+        recurrence: { interval: "monthly", intervalCount: 1 },
       },
     });
 
     expect(result.isError).toBe(true);
+    expect(errorText(result)).toMatch(/^Error: /);
 
     await client.close();
     await server.close();
@@ -70,7 +72,55 @@ describe("scheduled-charge tools", () => {
     await server.close();
   });
 
-  it("create_scheduled_charge rejects unsupported method (card requires tokenization)", async () => {
+  it("create_scheduled_charge accepts the card method (passes schema, then surfaces SDK error)", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "create_scheduled_charge",
+      arguments: {
+        customerId: 1,
+        productId: 456,
+        amount: 100,
+        type: "recurring",
+        dueDate: "2026-06-15",
+        methods: ["card"],
+        recurrence: { interval: "monthly", intervalCount: 1 },
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(errorText(result)).toMatch(/^Error: /);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("create_scheduled_charge accepts pix_automatic (schema passes; SDK then errors with no backend)", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+    const result = await client.callTool({
+      name: "create_scheduled_charge",
+      arguments: {
+        customerId: 1,
+        productId: 456,
+        amount: 297.5,
+        type: "recurring",
+        dueDate: "2026-06-15",
+        methods: ["pix_automatic"],
+        recurrence: { interval: "monthly", intervalCount: 1 },
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(errorText(result)).toMatch(/^Error: /);
+
+    await client.close();
+    await server.close();
+  });
+
+  it("create_scheduled_charge rejects an unknown payment method at the schema layer", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
@@ -81,11 +131,12 @@ describe("scheduled-charge tools", () => {
         amount: 100,
         type: "one_time",
         dueDate: "2026-06-15",
-        methods: ["card"],
+        methods: ["pix_manual"],
       },
     });
 
     expect(result.isError).toBe(true);
+    expect(errorText(result)).not.toMatch(/^Error: /);
 
     await client.close();
     await server.close();

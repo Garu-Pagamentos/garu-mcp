@@ -34,6 +34,10 @@ the value of the \`X-Garu-Signature\` header.
 - **PIX**: Instant payment via QR code (most popular in Brazil)
 - **Credit card**: Up to 12 installments
 - **Boleto**: Bank slip with 8-day deadline
+- **Pix Automático**: BACEN auto-debit recurring Pix — the customer authorizes
+  once, then later cycles debit silently. Recurring only (enable \`pixAutomatic\`
+  on the product for the subscription checkout, or pass \`pix_automatic\` in a
+  recurring \`create_scheduled_charge\`).
 
 ## Charge statuses
 - \`pending\` - Awaiting payment
@@ -50,6 +54,10 @@ configured in the dashboard. This page lists every step an integrating applicati
 
 > Note: the MCP server itself only requires \`GARU_API_KEY\`. \`GARU_WEBHOOK_SECRET\` lives in the
 > application that receives Garu's HTTP callbacks, not in the MCP server process.
+
+> Recurring payments: Garu supports card-on-file and **Pix Automático** (BACEN auto-debit recurring
+> Pix). Enable Pix Automático per product (the product's \`pixAutomatic\` flag) for the public
+> subscription checkout, or include \`pix_automatic\` in a recurring \`create_scheduled_charge\`.
 
 ---
 

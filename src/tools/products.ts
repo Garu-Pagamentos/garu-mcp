@@ -42,7 +42,9 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     "list_products",
     "List products for the authenticated seller with pagination and search. " +
       "The UUID returned for each product is the same identifier accepted by " +
-      "create_pix_charge and create_boleto_charge.",
+      "create_pix_charge and create_boleto_charge. Each product also carries a " +
+      "pixAutomatic boolean — when true, Pix Automático (BACEN auto-debit " +
+      "recurring Pix) is offered on the public subscription checkout.",
     {
       page: z.number().min(1).optional().describe("Page number, default 1"),
       limit: z
@@ -79,7 +81,9 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
   server.tool(
     "get_product",
     "Get details of a specific product by UUID. " +
-      "Use this to inspect a product before creating a charge.",
+      "Use this to inspect a product before creating a charge. The pixAutomatic " +
+      "boolean indicates whether Pix Automático (BACEN auto-debit recurring Pix) " +
+      "is enabled on the public subscription checkout for this product.",
     { uuid: z.string().uuid().describe("Product UUID") },
     async (args) => {
       try {

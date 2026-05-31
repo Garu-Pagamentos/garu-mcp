@@ -35,7 +35,7 @@ export function registerScheduledChargeTools(
 ): void {
   server.tool(
     "create_scheduled_charge",
-    "Schedule a future charge for an existing customer. Use list_customers first to find the customerId. type='one_time' is the simple case (PIX/Boleto). type='recurring' takes a recurrence config and silent-charges the saved card on every cycle past the first. Card method is recurring-only and requires productId. Optional trialDays (1..365, recurring-only) rebases cycle 1 to today + N days and emits customer.trial_started immediately.",
+    "Schedule a future charge for an existing customer. Use list_customers first to find the customerId. type='one_time' is the simple case (PIX/Boleto). type='recurring' takes a recurrence config and silent-charges the saved card on every cycle past the first. Card method is recurring-only and requires productId. Pix Automático (methods: ['pix_automatic']) is BACEN auto-debit recurring Pix — the customer authorizes once and later cycles debit silently; it is recurring-only and requires productId. Optional trialDays (1..365, recurring-only) rebases cycle 1 to today + N days and emits customer.trial_started immediately.",
     {
       customerId: z
         .number()
@@ -44,7 +44,7 @@ export function registerScheduledChargeTools(
         .number()
         .optional()
         .describe(
-          "Required when methods includes 'card' (Celcoin charges are scoped per product). Optional otherwise.",
+          "Required when methods includes 'card' or 'pix_automatic'. Optional otherwise.",
         ),
       amount: z
         .number()
@@ -69,10 +69,10 @@ export function registerScheduledChargeTools(
         .regex(dateRegex)
         .describe("YYYY-MM-DD in São Paulo time. Must be today or future."),
       methods: z
-        .array(z.enum(["pix", "boleto", "card"]))
+        .array(z.enum(["pix", "boleto", "card", "pix_automatic"]))
         .min(1)
         .describe(
-          "Payment methods to offer. 'card' is recurring-only and requires productId.",
+          "Payment methods to offer. 'card' is recurring-only and requires productId. 'pix_automatic' is Pix Automático (BACEN auto-debit recurring Pix): the customer authorizes once, then later cycles debit silently — only valid when type='recurring' and productId is set.",
         ),
       recurrence: z
         .object({
@@ -123,6 +123,8 @@ export function registerScheduledChargeTools(
     },
     async (args) => {
       try {
+        // @garuhq/node 0.13.0's ScheduledPaymentMethod type predates 'pix_automatic';
+        // the SDK is a thin openapi-fetch passthrough, so the cast forwards the method verbatim.
         const params = args as unknown as CreateScheduledChargeParams;
         const charge = await garu.scheduledCharges.create(params);
         return ok(charge);

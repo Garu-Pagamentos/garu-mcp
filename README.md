@@ -109,8 +109,8 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 
 | Tool | Description |
 |------|-------------|
-| `list_products` | List your seller's products with pagination and search |
-| `get_product` | Get a single product by UUID — the identifier accepted by the charge tools |
+| `list_products` | List your seller's products with pagination and search. Each product carries the `pixAutomatic` flag |
+| `get_product` | Get a single product by UUID — the identifier accepted by the charge tools. `pixAutomatic` enables Pix Automático on the public subscription checkout |
 | `get_product_portal_config` | Read per-product portal customization (B2B2C). Returns `null` if unset — product falls back to seller-level config |
 | `set_product_portal_config` | Upsert with merge: only fields provided are written. Pass `null` on a field to inherit from seller |
 | `clear_product_portal_config` | Remove the per-product config; product falls back to seller-level config |
@@ -144,11 +144,11 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 
 ### Scheduled charges (13 tools)
 
-Bill an existing customer on a future date — one-time or recurring with card tokenization.
+Bill an existing customer on a future date — one-time or recurring with card tokenization or Pix Automático (BACEN auto-debit recurring Pix; recurring + `productId` only).
 
 | Tool | Description |
 |------|-------------|
-| `create_scheduled_charge` | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+. Optional `maxRecoveryDays` (1–365) caps how long past `dueDate` the recovery sweep keeps auto-billing a missed charge (default 14) |
+| `create_scheduled_charge` | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+. `methods` accepts `pix_automatic` (Pix Automático — recurring + `productId` only). Optional `maxRecoveryDays` (1–365) caps how long past `dueDate` the recovery sweep keeps auto-billing a missed charge (default 14) |
 | `list_scheduled_charges` | Paginated list with filters by status, type, due-date range, customer |
 | `get_scheduled_charge` | Detail bundle: charge + event timeline + linked transactions |
 | `mark_paid_scheduled_charge` | Mark a cycle paid (off-Garu reconciliation) |

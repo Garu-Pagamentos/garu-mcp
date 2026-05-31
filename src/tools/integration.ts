@@ -68,6 +68,7 @@ const SETUP_PAYLOAD = {
   notes: [
     "Garu's API does not expose endpoints to create API keys or webhooks programmatically — both must be set up through the dashboard.",
     "The MCP server itself only needs `GARU_API_KEY`. `GARU_WEBHOOK_SECRET` lives in the integrating application that receives Garu's HTTP callbacks.",
+    "Recurring payments: Garu supports card-on-file (via create_scheduled_charge) and Pix Automático (BACEN auto-debit recurring Pix). Enable Pix Automático per product (the product's `pixAutomatic` flag, surfaced by get_product / list_products) for the public subscription checkout, or include `pix_automatic` in a recurring scheduled charge's `methods`.",
   ],
 };
 

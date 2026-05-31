@@ -5,6 +5,16 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.14.0] — 2026-05-31
+
+### Added
+
+- **Pix Automático** (BACEN auto-debit recurring Pix) support surfaced through the existing tools — fully additive, no breaking changes:
+  - `create_scheduled_charge`: the `methods` array now accepts `pix_automatic`. It is recurring-only and requires `productId` (i.e. `type: "recurring"` + a product). The customer authorizes once, then later cycles debit silently.
+  - `get_product` / `list_products`: documented the product `pixAutomatic` boolean, which enables Pix Automático on the public subscription checkout.
+  - `garu://docs/integration-setup` resource, the `get_integration_setup` tool output, and the quickstart docs now list Pix Automático as a recurring payment method.
+  - No `@garuhq/node` bump required: the SDK's `scheduledCharges.create()` is a thin passthrough, so `pix_automatic` rides the existing request body. The MCP input schema is the source of truth for the new value.
+
 ## [0.13.0] — 2026-05-25
 
 ### Added
