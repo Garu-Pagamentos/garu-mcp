@@ -138,14 +138,17 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     name: z.string().max(255).optional().describe("Product name."),
     value: z
       .number()
-      .int()
       .nonnegative()
       .optional()
       .describe(
-        "Price in centavos — BRL × 100 (e.g. R$29.90 → 2990). Products store " +
-          "the price in centavos, unlike scheduled charges which take decimal BRL.",
+        "Price in decimal BRL / reais (e.g. R$29,90 → 29.90) — NOT centavos. " +
+          "Products store the price in reais, the same as the API and dashboard.",
       ),
-    description: z.string().max(2000).optional().describe("Product description."),
+    description: z
+      .string()
+      .max(2000)
+      .optional()
+      .describe("Product description."),
     image: z
       .string()
       .url()
@@ -155,7 +158,10 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     tags: z.array(z.string().max(64)).optional().describe("Free-form tags."),
     pix: z.boolean().optional().describe("Offer PIX at checkout."),
     boleto: z.boolean().optional().describe("Offer Boleto at checkout."),
-    creditCard: z.boolean().optional().describe("Offer credit card at checkout."),
+    creditCard: z
+      .boolean()
+      .optional()
+      .describe("Offer credit card at checkout."),
     pixAutomatic: z
       .boolean()
       .optional()
@@ -205,8 +211,8 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     "create_product",
     "Create a product for the authenticated seller. Returns the created product, " +
       "whose UUID is the same identifier accepted by create_pix_charge / " +
-      "create_boleto_charge. value is in centavos (BRL × 100), unlike scheduled " +
-      "charges which take decimal BRL. Setting pixAutomatic: true exposes Pix " +
+      "create_boleto_charge. value is in decimal BRL / reais (e.g. 29.90), NOT " +
+      "centavos. Setting pixAutomatic: true exposes Pix " +
       "Automático (BACEN auto-debit recurring Pix) on the subscription checkout. " +
       "Pass idempotencyKey to make a retry across process restarts safe — the " +
       "backend returns the original product instead of creating a duplicate.",
@@ -235,8 +241,8 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
   server.tool(
     "update_product",
     "Update an existing product (partial PATCH — only the fields you provide are " +
-      "written; everything else keeps its persisted value). value is in centavos " +
-      "(BRL × 100). Setting pixAutomatic: true exposes Pix Automático (BACEN " +
+      "written; everything else keeps its persisted value). value is in decimal " +
+      "BRL / reais (e.g. 29.90), NOT centavos. Setting pixAutomatic: true exposes Pix Automático (BACEN " +
       "auto-debit recurring Pix) on the subscription checkout. At least one write " +
       "field is required.",
     {
