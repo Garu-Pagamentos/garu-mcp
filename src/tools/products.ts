@@ -64,7 +64,7 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
         .max(64)
         .optional()
         .describe(
-          "Backend tab filter (e.g. 'active', 'archived'). Backend default applies if omitted.",
+          "Deprecated — ignored by the v1 API. list returns the authenticated seller's own products.",
         ),
     },
     async (args) => {

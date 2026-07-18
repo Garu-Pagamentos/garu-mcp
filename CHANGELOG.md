@@ -5,6 +5,24 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.16.0] — 2026-07-18
+
+### Changed
+
+- **Product tools use the versioned public API.** Via `@garuhq/node@0.16.0`,
+  `list_products` / `get_product` / `create_product` / `update_product` and the
+  portal-config tools hit `/api/v1/products` (uuid-keyed). Products no longer
+  carry a numeric id — use `uuid`. `list_products`' `tab` argument is deprecated
+  and ignored by v1.
+
+### Fixed
+
+- **`value` is decimal Reais, not centavos.** `create_product` / `update_product`
+  described `value` as centavos and the schema used `.int()`; an agent following
+  the docs would create a product priced 100× (`2990` → R$ 2.990,00 instead of
+  R$ 29,90). `value` now takes a decimal amount in Reais and accepts decimals.
+  Charge / scheduled-charge amounts are unchanged.
+
 ## [0.15.0] — 2026-05-31
 
 ### Added
