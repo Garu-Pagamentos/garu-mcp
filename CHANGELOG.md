@@ -5,6 +5,30 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.17.0] — 2026-07-23
+
+### Fixed
+
+- **`refund_charge` no longer refunds 100x the requested amount.** It converted
+  the BRL input to centavos (`amount * 100`) before calling the SDK, but the SDK
+  and API take **reais**. A request to refund R$10,50 asked the gateway for
+  R$1.050,00. The conversion is gone; the amount passes through as reais.
+
+### Changed
+
+- **Requires `@garuhq/node` 1.0.0** (charges on `/api/v1/charges`, uuid-keyed).
+- `get_charge` and `refund_charge` now take **`uuid`** (string) instead of a
+  numeric `id`.
+- `list_charges` `paymentMethod` filter uses `creditCard` (was `creditcard`) and
+  gains a `productId` filter. `status` describes the friendly vocabulary.
+
+### Added
+
+- **`cancel_charge`** — cancel an unpaid charge by uuid.
+
+Card charges remain intentionally **absent** from the MCP surface: no agent
+should handle a raw PAN.
+
 ## [0.16.0] — 2026-07-18
 
 ### Changed

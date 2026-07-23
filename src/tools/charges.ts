@@ -10,7 +10,11 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
     {
       productId: z.string().uuid().describe("Product UUID"),
       customer: customerSchema,
-      additionalInfo: z.string().max(1000).optional().describe("Free-form metadata"),
+      additionalInfo: z
+        .string()
+        .max(1000)
+        .optional()
+        .describe("Free-form metadata"),
     },
     async (args) => {
       try {
@@ -65,10 +69,34 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
     "List charges for the authenticated seller with pagination and filters.",
     {
       page: z.number().min(1).optional().describe("Page number, default 1"),
-      limit: z.number().min(1).max(100).optional().describe("Items per page, default 20"),
-      status: z.string().max(50).optional().describe("Filter by status: pending, paid, refunded, etc."),
-      paymentMethod: z.string().max(50).optional().describe("Filter: pix, creditcard, boleto"),
-      search: z.string().max(255).optional().describe("Search by customer name, email, or document"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe("Items per page, default 20"),
+      status: z
+        .string()
+        .max(50)
+        .optional()
+        .describe(
+          "Filter by status: pending, authorized, paid, failed, refunded, etc.",
+        ),
+      paymentMethod: z
+        .string()
+        .max(50)
+        .optional()
+        .describe("Filter: pix, boleto, creditCard"),
+      productId: z
+        .string()
+        .uuid()
+        .optional()
+        .describe("Filter by product UUID"),
+      search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Search by customer name, email, or document"),
     },
     async (args) => {
       try {
@@ -77,9 +105,10 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
           limit?: number;
           status?: string;
           paymentMethod?: string;
+          productId?: string;
           search?: string;
         };
-        const result = await garu.charges.list(params);
+        const result = await garu.charges.list(params as never);
         return ok(result);
       } catch (err) {
         return fail(err);
@@ -89,12 +118,12 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
 
   server.tool(
     "get_charge",
-    "Get details of a specific charge by its numeric ID.",
-    { id: z.number().describe("Charge ID") },
+    "Get details of a specific charge by its uuid.",
+    { uuid: z.string().describe("Charge uuid") },
     async (args) => {
       try {
-        const { id } = args as unknown as { id: number };
-        const charge = await garu.charges.get(id);
+        const { uuid } = args as unknown as { uuid: string };
+        const charge = await garu.charges.retrieve(uuid);
         return ok(charge);
       } catch (err) {
         return fail(err);
@@ -104,27 +133,46 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
 
   server.tool(
     "refund_charge",
-    "Refund a charge fully or partially. Amount is in BRL (e.g. 10.50 for R$10,50). Converted to centavos internally.",
+    "Refund a charge fully or partially. Amount is in BRL / reais (e.g. 10.50 for R$10,50). " +
+      "For a Pix Automatico charge the refund is asynchronous: the charge returns as refund_pending " +
+      "and only reaches refunded once the transfer settles.",
     {
-      id: z.number().describe("Charge ID to refund"),
+      uuid: z.string().describe("Charge uuid to refund"),
       amount: z
         .number()
         .positive()
         .optional()
-        .describe("Partial refund amount in BRL (e.g. 10.50). Omit for full refund."),
+        .describe(
+          "Partial refund amount in BRL / reais (e.g. 10.50). Omit for full refund.",
+        ),
       reason: z.string().max(500).optional().describe("Reason for the refund"),
     },
     async (args) => {
       try {
-        const { id, amount, reason } = args as unknown as {
-          id: number;
+        const { uuid, amount, reason } = args as unknown as {
+          uuid: string;
           amount?: number;
           reason?: string;
         };
-        // SDK expects centavos, tool accepts BRL for user-friendliness
-        const amountCentavos = amount !== undefined ? Math.round(amount * 100) : undefined;
-        const charge = await garu.charges.refund(id, { amount: amountCentavos, reason });
+        // Reais, passed straight through. The SDK/API take reais here; the old
+        // *100 conversion refunded 100x the intended amount.
+        const charge = await garu.charges.refund(uuid, { amount, reason });
         return ok(charge);
+      } catch (err) {
+        return fail(err);
+      }
+    },
+  );
+
+  server.tool(
+    "cancel_charge",
+    "Cancel an unpaid charge by its uuid.",
+    { uuid: z.string().describe("Charge uuid to cancel") },
+    async (args) => {
+      try {
+        const { uuid } = args as unknown as { uuid: string };
+        const result = await garu.charges.cancel(uuid);
+        return ok(result);
       } catch (err) {
         return fail(err);
       }

@@ -128,8 +128,9 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 | `create_pix_charge` | Create a PIX charge with QR code |
 | `create_boleto_charge` | Create a boleto bancário charge |
 | `list_charges` | List charges with pagination and filters |
-| `get_charge` | Get charge details by ID (includes `status`) |
-| `refund_charge` | Refund a charge (full or partial) |
+| `get_charge` | Get charge details by uuid (includes `status`) |
+| `refund_charge` | Refund a charge (full or partial, amount in reais) |
+| `cancel_charge` | Cancel an unpaid charge by uuid |
 
 ### Customers (6 tools)
 
