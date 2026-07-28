@@ -5,6 +5,29 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.18.0] — 2026-07-28
+
+### Removed
+
+- **`statementDescriptor` dropped from `create_product` and `update_product`.**
+  The parameter was described as "text shown on the buyer's card/bank statement",
+  but nothing behind it delivered that: there is no such column on the product,
+  and no payment-provider integration ever sent a descriptor field. The value was
+  discarded the moment the request reached the API. Gateway v0.19.0 removed it
+  from the accepted request body; the tool no longer advertises it. Sending it
+  was already a no-op, so nothing breaks — the schema just stops promising
+  something the platform cannot do.
+
+### Fixed
+
+- **`pixAutomatic` now actually applies.** No schema change here — the parameter
+  was already offered on both product tools, but no gateway route accepted it, so
+  it was silently stripped and every product stayed on the column default
+  (`true`). Gateway v0.19.0 made the field writable, so `pixAutomatic: false` now
+  opts a product out of the Pix Automático subscription checkout. Turning it off
+  blocks *new* Pix Automático subscriptions on that product; subscriptions
+  already active keep billing.
+
 ## [0.17.0] — 2026-07-23
 
 ### Fixed
