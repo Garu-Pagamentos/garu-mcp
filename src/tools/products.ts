@@ -200,11 +200,6 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
       .max(120)
       .optional()
       .describe("Label for the return-URL button on the success page."),
-    statementDescriptor: z
-      .string()
-      .max(120)
-      .optional()
-      .describe("Text shown on the buyer's card/bank statement."),
   };
 
   server.tool(
