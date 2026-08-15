@@ -5,6 +5,31 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.19.0] — 2026-08-15
+
+### Added
+
+- **Twelve tools for boleto parcelado (carnê) and refund requests.** A carnê is
+  one product paid with N monthly bank slips, and it is seller-financed
+  consumer credit rather than a card instalment — the tool descriptions say so,
+  because an agent choosing between payment methods needs to know the seller
+  carries the default risk.
+  - Plans: `create_installment_plan`, `list_installment_plans`,
+    `get_installment_plan`, `reissue_plan_installment`,
+    `postpone_plan_installment`, `mark_plan_installment_paid`,
+    `cancel_installment_plan`, `request_plan_refund`.
+  - Refunds: `list_refund_requests`, `get_refund_request`,
+    `confirm_refund_request`, `reject_refund_request`.
+- `create_installment_plan` takes an optional `affiliateId`, fixed at sale time
+  because every later parcela inherits it.
+- `confirm_refund_request` records that the seller HAS ALREADY sent the money.
+  Garu never observes the transfer, so an agent must not call it speculatively;
+  the description says this outright.
+
+### Changed
+
+- Requires `@garuhq/node` 1.1.0, which adds the two resources these tools wrap.
+
 ## [0.18.0] — 2026-07-28
 
 ### Removed
@@ -25,7 +50,7 @@ Older releases (≤ 0.4.0) are documented only in the corresponding git tag anno
   it was silently stripped and every product stayed on the column default
   (`true`). Gateway v0.19.0 made the field writable, so `pixAutomatic: false` now
   opts a product out of the Pix Automático subscription checkout. Turning it off
-  blocks *new* Pix Automático subscriptions on that product; subscriptions
+  blocks _new_ Pix Automático subscriptions on that product; subscriptions
   already active keep billing.
 
 ## [0.17.0] — 2026-07-23
@@ -175,7 +200,7 @@ should handle a raw PAN.
 - Bump `@garuhq/node` to `0.11.1` to pick up the empty-body POST fix.
   The `retry_webhook_event` and `resume_scheduled_charge` tools were
   failing against production with `Body cannot be empty when content-type
-  is set to 'application/json'`. The SDK now sends an explicit `{}` body
+is set to 'application/json'`. The SDK now sends an explicit `{}` body
   on every otherwise-empty mutation.
 
 ## [0.11.0] — 2026-05-19
@@ -197,7 +222,7 @@ should handle a raw PAN.
     attempt. Works on any status.
 - Server `instructions` updated so agents reach for these tools when a
   user mentions a missed, failed, or unprocessed webhook event. The
-  caveat that webhook endpoint *creation* (URL, subscribed events,
+  caveat that webhook endpoint _creation_ (URL, subscribed events,
   secret) is still dashboard-only is preserved.
 
 ### Changed
