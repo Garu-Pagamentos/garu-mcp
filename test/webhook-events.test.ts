@@ -2,8 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { setupServer } from "./helpers.js";
 
+const EVENT_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+const CLONE_UUID = "f9e8d7c6-b5a4-3210-9876-543210fedcba";
+
 function textContent(result: { content: unknown }): string {
-  return ((result.content as Array<{ text: string }>)[0]).text;
+  return (result.content as Array<{ text: string }>)[0].text;
 }
 
 describe("webhook-event tools", () => {
@@ -45,7 +48,7 @@ describe("webhook-event tools", () => {
     await server.close();
   });
 
-  it("get_webhook_event rejects a non-positive id", async () => {
+  it("get_webhook_event rejects a non-uuid id", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -54,16 +57,17 @@ describe("webhook-event tools", () => {
 
     const result = await client.callTool({
       name: "get_webhook_event",
-      arguments: { id: 0 },
+      arguments: { uuid: "42" },
     });
 
     expect(result.isError).toBe(true);
+    expect(textContent(result)).toMatch(/invalid|uuid/i);
 
     await client.close();
     await server.close();
   });
 
-  it("retry_webhook_event rejects a non-positive id", async () => {
+  it("retry_webhook_event rejects a non-uuid id", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -72,7 +76,7 @@ describe("webhook-event tools", () => {
 
     const result = await client.callTool({
       name: "retry_webhook_event",
-      arguments: { id: -1 },
+      arguments: { uuid: "not-a-uuid" },
     });
 
     expect(result.isError).toBe(true);
@@ -81,24 +85,26 @@ describe("webhook-event tools", () => {
     await server.close();
   });
 
-  it("list_webhook_events forwards filters end-to-end (snake → camel SDK → snake wire) and returns the SDK result", async () => {
+  it("list_webhook_events forwards filters end-to-end (snake → camel SDK → camel wire) and returns the SDK result", async () => {
     // Pins the full mapping chain: agent passes `event_type` / `endpoint_id`
     // (snake_case MCP convention) → handler must hand the SDK `eventType` /
-    // `endpointId` (camelCase) → SDK puts them back to snake_case on the wire.
-    // A regression at any link breaks customer queries silently (empty list
-    // instead of an error), so this test pins all three forms in one shot.
+    // `endpointId` (camelCase) → SDK puts them back to camelCase on the /api/v1
+    // wire. A regression at any link breaks customer queries silently (empty
+    // list instead of an error), so this test pins all three forms in one shot.
     const fetchStub = vi.fn(async (_input: string | URL | Request) => {
       return new Response(
         JSON.stringify({
-          events: [
+          data: [
             {
-              id: 42,
+              uuid: EVENT_UUID,
               status: "failed",
               eventType: "transaction.payment.paid",
               webhookEndpoint: { id: 17, url: "https://example.test/hook" },
             },
           ],
-          meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
+          count: 1,
+          totalCount: 1,
+          totalPages: 1,
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
@@ -106,7 +112,8 @@ describe("webhook-event tools", () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = fetchStub as unknown as typeof globalThis.fetch;
     try {
-      const { server, client, clientTransport, serverTransport } = setupServer();
+      const { server, client, clientTransport, serverTransport } =
+        setupServer();
       await Promise.all([
         server.connect(serverTransport),
         client.connect(clientTransport),
@@ -129,15 +136,15 @@ describe("webhook-event tools", () => {
         firstCallArg instanceof Request
           ? firstCallArg.url
           : String(firstCallArg);
-      expect(url).toContain("/api/webhook-events");
+      expect(url).toContain("/api/v1/webhook-events");
       expect(url).toContain("status=failed");
-      // Wire format is snake_case — proves the camelCase SDK input round-trips correctly.
-      expect(url).toContain("event_type=transaction.payment.paid");
-      expect(url).toContain("endpoint_id=17");
+      // Wire format is camelCase on /api/v1 — proves the SDK input round-trips correctly.
+      expect(url).toContain("eventType=transaction.payment.paid");
+      expect(url).toContain("endpointId=17");
       expect(url).toContain("limit=50");
 
       const body = textContent(result);
-      expect(body).toContain('"id": 42');
+      expect(body).toContain(`"uuid": "${EVENT_UUID}"`);
       expect(body).toContain('"status": "failed"');
 
       await client.close();
@@ -185,7 +192,7 @@ describe("webhook-event tools", () => {
     await server.close();
   });
 
-  it("resend_webhook_event rejects a non-positive id", async () => {
+  it("resend_webhook_event rejects a non-uuid id", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -194,7 +201,7 @@ describe("webhook-event tools", () => {
 
     const result = await client.callTool({
       name: "resend_webhook_event",
-      arguments: { id: 0 },
+      arguments: { uuid: "0" },
     });
 
     expect(result.isError).toBe(true);
@@ -210,18 +217,19 @@ describe("webhook-event tools", () => {
     const fetchStub = vi.fn(async (_input: string | URL | Request) => {
       return new Response(
         JSON.stringify({
-          id: 100,
+          uuid: CLONE_UUID,
           status: "pending",
-          manualResendOf: 42,
+          manualResendOf: EVENT_UUID,
           eventType: "transaction.payment.paid",
         }),
-        { status: 200, headers: { "content-type": "application/json" } },
+        { status: 201, headers: { "content-type": "application/json" } },
       );
     });
     const originalFetch = globalThis.fetch;
     globalThis.fetch = fetchStub as unknown as typeof globalThis.fetch;
     try {
-      const { server, client, clientTransport, serverTransport } = setupServer();
+      const { server, client, clientTransport, serverTransport } =
+        setupServer();
       await Promise.all([
         server.connect(serverTransport),
         client.connect(clientTransport),
@@ -229,7 +237,7 @@ describe("webhook-event tools", () => {
 
       const result = await client.callTool({
         name: "resend_webhook_event",
-        arguments: { id: 42 },
+        arguments: { uuid: EVENT_UUID },
       });
 
       expect(result.isError).toBeFalsy();
@@ -239,11 +247,11 @@ describe("webhook-event tools", () => {
         firstCallArg instanceof Request
           ? firstCallArg.url
           : String(firstCallArg);
-      expect(url).toContain("/api/webhook-events/42/resend");
+      expect(url).toContain(`/api/v1/webhook-events/${EVENT_UUID}/resend`);
 
       const body = textContent(result);
-      expect(body).toContain('"id": 100');
-      expect(body).toContain('"manualResendOf": 42');
+      expect(body).toContain(`"uuid": "${CLONE_UUID}"`);
+      expect(body).toContain(`"manualResendOf": "${EVENT_UUID}"`);
 
       await client.close();
       await server.close();

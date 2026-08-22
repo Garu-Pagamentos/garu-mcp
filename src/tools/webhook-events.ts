@@ -14,15 +14,17 @@ const STATUSES: [WebhookEventStatus, ...WebhookEventStatus[]] = [
   "failed",
 ];
 
-export function registerWebhookEventTools(
-  server: McpServer,
-  garu: Garu,
-): void {
+export function registerWebhookEventTools(server: McpServer, garu: Garu): void {
   server.tool(
     "list_webhook_events",
     "List webhook events for the authenticated seller. Filter by delivery status (pending, success, failed), by Garu event type (e.g. 'transaction.payment.paid'), and/or by the destination endpoint id. Use this to audit deliveries — the canonical 'did my customer's endpoint actually receive event X?' workflow. Newest first.",
     {
-      page: z.number().int().min(1).optional().describe("Page number, default 1"),
+      page: z
+        .number()
+        .int()
+        .min(1)
+        .optional()
+        .describe("Page number, default 1"),
       limit: z
         .number()
         .int()
@@ -75,14 +77,14 @@ export function registerWebhookEventTools(
 
   server.tool(
     "get_webhook_event",
-    "Fetch one webhook event by numeric id. Returns the full payload, the embedded endpoint snapshot, the most recent response status/body, and the retry schedule. Use this to drill into why a delivery is failing.",
+    "Fetch one webhook event by uuid. Returns the full payload, the embedded endpoint snapshot, the most recent response status/body, and the retry schedule. Use this to drill into why a delivery is failing.",
     {
-      id: z.number().int().positive().describe("Webhook event id"),
+      uuid: z.string().uuid().describe("Webhook event uuid"),
     },
     async (args) => {
       try {
-        const { id } = args as { id: number };
-        const event = await garu.webhookEvents.get(id);
+        const { uuid } = args as { uuid: string };
+        const event = await garu.webhookEvents.get(uuid);
         return ok(event);
       } catch (err) {
         return fail(err);
@@ -92,14 +94,14 @@ export function registerWebhookEventTools(
 
   server.tool(
     "retry_webhook_event",
-    "Re-deliver a webhook event by id. Resets it to 'pending' in place, clears the retry schedule, and triggers an immediate delivery attempt. Works on any status (success, failed, pending). For most cases prefer resend_webhook_event, which preserves the original event's audit trail by cloning instead of mutating — retry overwrites the historical response status/body on the source row. Kept for callers that explicitly want the legacy in-place semantics.",
+    "Re-deliver a webhook event by uuid. Resets it to 'pending' in place, clears the retry schedule, and triggers an immediate delivery attempt. Works on any status (success, failed, pending). For most cases prefer resend_webhook_event, which preserves the original event's audit trail by cloning instead of mutating — retry overwrites the historical response status/body on the source row. Kept for callers that explicitly want the legacy in-place semantics.",
     {
-      id: z.number().int().positive().describe("Webhook event id"),
+      uuid: z.string().uuid().describe("Webhook event uuid"),
     },
     async (args) => {
       try {
-        const { id } = args as { id: number };
-        const event = await garu.webhookEvents.retry(id);
+        const { uuid } = args as { uuid: string };
+        const event = await garu.webhookEvents.retry(uuid);
         return ok(event);
       } catch (err) {
         return fail(err);
@@ -109,14 +111,17 @@ export function registerWebhookEventTools(
 
   server.tool(
     "resend_webhook_event",
-    "Re-deliver a webhook event by id, audit-trail preserving. Inserts a fresh event (new numeric id) that points back at the source via manualResendOf, then dispatches that clone — the original row is left untouched, so its prior response status/body stays on the record. Works on any status (success, failed, pending). Returns the clone event; the returned id is the new event's id, NOT the source. The customer's webhook handler will see Idempotency-Key: resend_<original-id> on the delivery, and can distinguish a resend from the original by that prefix or by the payload's manualResendOf field. Prefer this over retry_webhook_event when a customer reports a missed or unprocessed event, or during a backfill — you want the original delivery outcome to remain on the record.",
+    "Re-deliver a webhook event by uuid, audit-trail preserving. Inserts a fresh event (new uuid) that points back at the source via manualResendOf, then dispatches that clone — the original row is left untouched, so its prior response status/body stays on the record. Works on any status (success, failed, pending). Returns the clone event; the returned uuid is the new event's uuid, NOT the source. The customer's webhook handler will see Idempotency-Key: resend_<clone-uuid> on the delivery, and can distinguish a resend from the original by that prefix or by the payload's manualResendOf field. Prefer this over retry_webhook_event when a customer reports a missed or unprocessed event, or during a backfill — you want the original delivery outcome to remain on the record.",
     {
-      id: z.number().int().positive().describe("Webhook event id of the source event to clone and resend"),
+      uuid: z
+        .string()
+        .uuid()
+        .describe("Webhook event uuid of the source event to clone and resend"),
     },
     async (args) => {
       try {
-        const { id } = args as { id: number };
-        const event = await garu.webhookEvents.resend(id);
+        const { uuid } = args as { uuid: string };
+        const event = await garu.webhookEvents.resend(uuid);
         return ok(event);
       } catch (err) {
         return fail(err);

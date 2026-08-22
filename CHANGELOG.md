@@ -5,6 +5,27 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.21.0] — 2026-08-22
+
+Via `@garuhq/node@3.0.0`, `webhookEvents` now targets the versioned public
+API `/api/v1/webhook-events`, keyed on `uuid`.
+
+### Breaking
+
+- **`get_webhook_event`, `retry_webhook_event`, and `resend_webhook_event`
+  now take `uuid` (string) instead of `id` (number).** An agent or script
+  still calling these with `id` gets a schema-validation error, not a
+  silent misroute — `uuid` is a required field with no `id` fallback.
+- **`manualResendOf` in tool results is now a uuid string**, not a numeric
+  id.
+
+### Unaffected
+
+- `list_webhook_events` — same input shape as before (still `event_type` /
+  `endpoint_id` snake_case filters); only the ids in returned events changed
+  from `id` to `uuid`, and the envelope now reports `count`/`totalCount`/
+  `totalPages` instead of `meta.page`/`meta.total`.
+
 ## [0.20.0] — 2026-08-22
 
 Via `@garuhq/node@2.0.0`, `customers` now targets the versioned public API
