@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { setupServer } from "./helpers.js";
+import { setupServer, stubInvalidApiKey } from "./helpers.js";
 
 const CUSTOMER_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
@@ -30,24 +30,30 @@ describe("customer tools", () => {
   });
 
   it("get_customer handles errors gracefully", async () => {
-    const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    const stub = stubInvalidApiKey();
+    try {
+      const { server, client, clientTransport, serverTransport } =
+        setupServer();
+      await Promise.all([
+        server.connect(serverTransport),
+        client.connect(clientTransport),
+      ]);
 
-    const result = await client.callTool({
-      name: "get_customer",
-      arguments: { uuid: CUSTOMER_UUID },
-    });
+      const result = await client.callTool({
+        name: "get_customer",
+        arguments: { uuid: CUSTOMER_UUID },
+      });
 
-    expect(result.isError).toBe(true);
-    expect(result.content).toHaveLength(1);
-    const text = errorText(result);
-    expect(text).toMatch(/^Error: /);
+      expect(result.isError).toBe(true);
+      expect(result.content).toHaveLength(1);
+      const text = errorText(result);
+      expect(text).toMatch(/^Error: /);
 
-    await client.close();
-    await server.close();
+      await client.close();
+      await server.close();
+    } finally {
+      stub.restore();
+    }
   });
 
   it("get_customer rejects a non-uuid id", async () => {

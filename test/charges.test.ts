@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { setupServer } from "./helpers.js";
+import { setupServer, stubInvalidApiKey } from "./helpers.js";
 
 function errorText(result: { content: unknown }): string {
   return (result.content as Array<{ text: string }>)[0].text;
@@ -45,43 +45,55 @@ describe("charge tools", () => {
   });
 
   it("get_charge handles errors gracefully", async () => {
-    const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    const stub = stubInvalidApiKey();
+    try {
+      const { server, client, clientTransport, serverTransport } =
+        setupServer();
+      await Promise.all([
+        server.connect(serverTransport),
+        client.connect(clientTransport),
+      ]);
 
-    const result = await client.callTool({
-      name: "get_charge",
-      arguments: { uuid: "6f1c9b2e-4a7d-4f0b-9a3e-1d2c3b4a5e6f" },
-    });
+      const result = await client.callTool({
+        name: "get_charge",
+        arguments: { uuid: "6f1c9b2e-4a7d-4f0b-9a3e-1d2c3b4a5e6f" },
+      });
 
-    expect(result.isError).toBe(true);
-    expect(result.content).toHaveLength(1);
-    const text = errorText(result);
-    expect(text).toMatch(/^Error: /);
-    // Error sanitization: no raw URLs should leak
-    expect(text).not.toMatch(/https?:\/\/(?!.*redacted)/);
+      expect(result.isError).toBe(true);
+      expect(result.content).toHaveLength(1);
+      const text = errorText(result);
+      expect(text).toMatch(/^Error: /);
+      // Error sanitization: no raw URLs should leak
+      expect(text).not.toMatch(/https?:\/\/(?!.*redacted)/);
 
-    await client.close();
-    await server.close();
+      await client.close();
+      await server.close();
+    } finally {
+      stub.restore();
+    }
   });
 
   it("list_charges accepts filter params", async () => {
-    const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
+    const stub = stubInvalidApiKey();
+    try {
+      const { server, client, clientTransport, serverTransport } =
+        setupServer();
+      await Promise.all([
+        server.connect(serverTransport),
+        client.connect(clientTransport),
+      ]);
 
-    const result = await client.callTool({
-      name: "list_charges",
-      arguments: { page: 1, limit: 5, status: "paid" },
-    });
+      const result = await client.callTool({
+        name: "list_charges",
+        arguments: { page: 1, limit: 5, status: "paid" },
+      });
 
-    expect(result.content).toBeDefined();
+      expect(result.content).toBeDefined();
 
-    await client.close();
-    await server.close();
+      await client.close();
+      await server.close();
+    } finally {
+      stub.restore();
+    }
   });
 });
