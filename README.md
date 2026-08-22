@@ -107,13 +107,13 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 
 ### Products (5 tools)
 
-| Tool | Description |
-|------|-------------|
-| `list_products` | List your seller's products with pagination and search. Each product carries the `pixAutomatic` flag |
-| `get_product` | Get a single product by UUID — the identifier accepted by the charge tools. `pixAutomatic` enables Pix Automático on the public subscription checkout |
-| `get_product_portal_config` | Read per-product portal customization (B2B2C). Returns `null` if unset — product falls back to seller-level config |
-| `set_product_portal_config` | Upsert with merge: only fields provided are written. Pass `null` on a field to inherit from seller |
-| `clear_product_portal_config` | Remove the per-product config; product falls back to seller-level config |
+| Tool                          | Description                                                                                                                                           |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_products`               | List your seller's products with pagination and search. Each product carries the `pixAutomatic` flag                                                  |
+| `get_product`                 | Get a single product by UUID — the identifier accepted by the charge tools. `pixAutomatic` enables Pix Automático on the public subscription checkout |
+| `get_product_portal_config`   | Read per-product portal customization (B2B2C). Returns `null` if unset — product falls back to seller-level config                                    |
+| `set_product_portal_config`   | Upsert with merge: only fields provided are written. Pass `null` on a field to inherit from seller                                                    |
+| `clear_product_portal_config` | Remove the per-product config; product falls back to seller-level config                                                                              |
 
 > Portal-config tools accept `productId` as either the product UUID (preferred — same id returned by `list_products`) or the legacy numeric id. UUID support added in Garu v0.10.0.
 >
@@ -123,44 +123,44 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 
 ### Charges (5 tools)
 
-| Tool | Description |
-|------|-------------|
-| `create_pix_charge` | Create a PIX charge with QR code |
-| `create_boleto_charge` | Create a boleto bancário charge |
-| `list_charges` | List charges with pagination and filters |
-| `get_charge` | Get charge details by uuid (includes `status`) |
-| `refund_charge` | Refund a charge (full or partial, amount in reais) |
-| `cancel_charge` | Cancel an unpaid charge by uuid |
+| Tool                   | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| `create_pix_charge`    | Create a PIX charge with QR code                   |
+| `create_boleto_charge` | Create a boleto bancário charge                    |
+| `list_charges`         | List charges with pagination and filters           |
+| `get_charge`           | Get charge details by uuid (includes `status`)     |
+| `refund_charge`        | Refund a charge (full or partial, amount in reais) |
+| `cancel_charge`        | Cancel an unpaid charge by uuid                    |
 
 ### Customers (6 tools)
 
-| Tool | Description |
-|------|-------------|
-| `create_customer` | Create a customer linked to your seller account |
-| `list_customers` | List customers with search and pagination |
-| `get_customer` | Get customer details by ID |
-| `update_customer` | Update customer information |
-| `delete_customer` | Remove customer from your seller account |
+| Tool                                  | Description                                       |
+| ------------------------------------- | ------------------------------------------------- |
+| `create_customer`                     | Create a customer linked to your seller account   |
+| `list_customers`                      | List customers with search and pagination         |
+| `get_customer`                        | Get customer details by uuid                      |
+| `update_customer`                     | Update customer information                       |
+| `delete_customer`                     | Remove customer from your seller account          |
 | `set_customer_billing_email_override` | Override the billing-email used for that customer |
 
 ### Scheduled charges (13 tools)
 
 Bill an existing customer on a future date — one-time or recurring with card tokenization or Pix Automático (BACEN auto-debit recurring Pix; recurring + `productId` only).
 
-| Tool | Description |
-|------|-------------|
-| `create_scheduled_charge` | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+. `methods` accepts `pix_automatic` (Pix Automático — recurring + `productId` only). Optional `maxRecoveryDays` (1–365) caps how long past `dueDate` the recovery sweep keeps auto-billing a missed charge (default 14) |
-| `list_scheduled_charges` | Paginated list with filters by status, type, due-date range, customer |
-| `get_scheduled_charge` | Detail bundle: charge + event timeline + linked transactions |
-| `mark_paid_scheduled_charge` | Mark a cycle paid (off-Garu reconciliation) |
-| `charge_now_scheduled_charge` | Force-bill the current cycle now instead of waiting for the due date (same dispatch as the daily cron). Idempotent — reports `already_sent` rather than re-charging |
-| `postpone_scheduled_charge` | Move next due date forward |
-| `pause_scheduled_charge` / `resume_scheduled_charge` | Suspend / re-enable a series |
-| `cancel_recurrence_scheduled_charge` | Hard-stop future cycles (recurring only) |
-| `cancel_at_period_end_scheduled_charge` | Stripe-style soft-cancel; reversible |
-| `change_scheduled_charge_payment_method` | Swap the saved card |
-| `clear_scheduled_charge_payment_method` | Remove saved card; future cycles email-with-link |
-| `list_scheduled_charge_attempts` | Per-attempt billing log (v0.8.2). Each row carries the canonical `failureCode` for declines — use this to debug recurring billing failures without joining Transactions |
+| Tool                                                 | Description                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_scheduled_charge`                            | Schedule a future charge. `type='recurring'` enables silent-charge of saved card on cycle 2+. `methods` accepts `pix_automatic` (Pix Automático — recurring + `productId` only). Optional `maxRecoveryDays` (1–365) caps how long past `dueDate` the recovery sweep keeps auto-billing a missed charge (default 14) |
+| `list_scheduled_charges`                             | Paginated list with filters by status, type, due-date range, customer                                                                                                                                                                                                                                               |
+| `get_scheduled_charge`                               | Detail bundle: charge + event timeline + linked transactions                                                                                                                                                                                                                                                        |
+| `mark_paid_scheduled_charge`                         | Mark a cycle paid (off-Garu reconciliation)                                                                                                                                                                                                                                                                         |
+| `charge_now_scheduled_charge`                        | Force-bill the current cycle now instead of waiting for the due date (same dispatch as the daily cron). Idempotent — reports `already_sent` rather than re-charging                                                                                                                                                 |
+| `postpone_scheduled_charge`                          | Move next due date forward                                                                                                                                                                                                                                                                                          |
+| `pause_scheduled_charge` / `resume_scheduled_charge` | Suspend / re-enable a series                                                                                                                                                                                                                                                                                        |
+| `cancel_recurrence_scheduled_charge`                 | Hard-stop future cycles (recurring only)                                                                                                                                                                                                                                                                            |
+| `cancel_at_period_end_scheduled_charge`              | Stripe-style soft-cancel; reversible                                                                                                                                                                                                                                                                                |
+| `change_scheduled_charge_payment_method`             | Swap the saved card                                                                                                                                                                                                                                                                                                 |
+| `clear_scheduled_charge_payment_method`              | Remove saved card; future cycles email-with-link                                                                                                                                                                                                                                                                    |
+| `list_scheduled_charge_attempts`                     | Per-attempt billing log (v0.8.2). Each row carries the canonical `failureCode` for declines — use this to debug recurring billing failures without joining Transactions                                                                                                                                             |
 
 ### Resources
 

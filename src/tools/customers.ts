@@ -67,12 +67,12 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
 
   server.tool(
     "get_customer",
-    "Get details of a specific customer by numeric ID.",
-    { id: z.number().describe("Customer ID") },
+    "Get details of a specific customer by uuid.",
+    { uuid: z.string().uuid().describe("Customer uuid") },
     async (args) => {
       try {
-        const { id } = args as unknown as { id: number };
-        const customer = await garu.customers.get(id);
+        const { uuid } = args as unknown as { uuid: string };
+        const customer = await garu.customers.get(uuid);
         return ok(customer);
       } catch (err) {
         return fail(err);
@@ -84,7 +84,7 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     "update_customer",
     "Update a customer's information for the current seller.",
     {
-      id: z.number().describe("Customer ID"),
+      uuid: z.string().uuid().describe("Customer uuid"),
       name: z.string().max(255).optional(),
       email: z.string().email().max(255).optional(),
       phone: z
@@ -115,10 +115,10 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     },
     async (args) => {
       try {
-        const { id, ...rest } = args as unknown as {
-          id: number;
+        const { uuid, ...rest } = args as unknown as {
+          uuid: string;
         } & UpdateCustomerParams;
-        const customer = await garu.customers.update(id, rest);
+        const customer = await garu.customers.update(uuid, rest);
         return ok(customer);
       } catch (err) {
         return fail(err);
@@ -130,7 +130,7 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     "set_customer_billing_email_override",
     "Set or clear the per-seller billing email override for a customer. The override is sticky: it takes precedence over the per-seller last-used email and the global customer.email for outbound seller-to-customer emails, and is never auto-overwritten by subsequent payments. Pass null to clear and fall back to the last-used email. Use this when the customer asks for a specific billing address (e.g. financeiro@empresa.com.br) different from the email they used at checkout.",
     {
-      id: z.number().describe("Customer ID"),
+      uuid: z.string().uuid().describe("Customer uuid"),
       billingEmailOverride: z
         .union([z.string().email().max(255), z.null()])
         .describe(
@@ -139,11 +139,11 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
     },
     async (args) => {
       try {
-        const { id, billingEmailOverride } = args as unknown as {
-          id: number;
+        const { uuid, billingEmailOverride } = args as unknown as {
+          uuid: string;
           billingEmailOverride: string | null;
         };
-        const customer = await garu.customers.setBillingEmailOverride(id, {
+        const customer = await garu.customers.setBillingEmailOverride(uuid, {
           billingEmailOverride,
         });
         return ok(customer);
@@ -156,12 +156,12 @@ export function registerCustomerTools(server: McpServer, garu: Garu): void {
   server.tool(
     "delete_customer",
     "Remove a customer from the current seller. Does not delete the customer globally.",
-    { id: z.number().describe("Customer ID to remove") },
+    { uuid: z.string().uuid().describe("Customer uuid to remove") },
     async (args) => {
       try {
-        const { id } = args as unknown as { id: number };
-        await garu.customers.delete(id);
-        return ok({ success: true, message: "Customer removed from seller" });
+        const { uuid } = args as unknown as { uuid: string };
+        const result = await garu.customers.delete(uuid);
+        return ok(result);
       } catch (err) {
         return fail(err);
       }

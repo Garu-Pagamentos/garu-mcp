@@ -5,6 +5,27 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.20.0] — 2026-08-22
+
+Via `@garuhq/node@2.0.0`, `customers` now targets the versioned public API
+`/api/v1/customers`, keyed on `uuid`.
+
+### Breaking
+
+- **`get_customer`, `update_customer`, `set_customer_billing_email_override`,
+  and `delete_customer` now take `uuid` (string) instead of `id` (number).**
+  An agent or script still calling these with `id` gets a schema-validation
+  error, not a silent misroute — `uuid` is a required field with no `id`
+  fallback.
+- **`delete_customer`'s tool result changed** from `{ success, message }` to
+  the SDK's own `{ removed: boolean }` — pass the raw v1 response through
+  rather than wrapping it.
+
+### Unaffected
+
+- `create_customer` and `list_customers` — same input shape as before; only
+  the ids returned in customer objects changed from `id` to `uuid`.
+
 ## [0.19.0] — 2026-08-15
 
 ### Added

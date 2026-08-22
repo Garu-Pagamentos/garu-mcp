@@ -2,14 +2,19 @@ import { describe, expect, it } from "vitest";
 
 import { setupServer } from "./helpers.js";
 
+const CUSTOMER_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
 function errorText(result: { content: unknown }): string {
-  return ((result.content as Array<{ text: string }>)[0]).text;
+  return (result.content as Array<{ text: string }>)[0].text;
 }
 
 describe("customer tools", () => {
   it("lists available customer tools", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const tools = await client.listTools();
     const names = tools.tools.map((t) => t.name);
@@ -26,9 +31,15 @@ describe("customer tools", () => {
 
   it("get_customer handles errors gracefully", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
-    const result = await client.callTool({ name: "get_customer", arguments: { id: 1 } });
+    const result = await client.callTool({
+      name: "get_customer",
+      arguments: { uuid: CUSTOMER_UUID },
+    });
 
     expect(result.isError).toBe(true);
     expect(result.content).toHaveLength(1);
@@ -39,13 +50,36 @@ describe("customer tools", () => {
     await server.close();
   });
 
+  it("get_customer rejects a non-uuid id", async () => {
+    const { server, client, clientTransport, serverTransport } = setupServer();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const result = await client.callTool({
+      name: "get_customer",
+      arguments: { uuid: "42" },
+    });
+
+    expect(result.isError).toBe(true);
+    const text = errorText(result);
+    expect(text).toMatch(/invalid|uuid/i);
+
+    await client.close();
+    await server.close();
+  });
+
   it("update_customer rejects invalid document format", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.callTool({
       name: "update_customer",
-      arguments: { id: 1, document: "invalid-doc" },
+      arguments: { uuid: CUSTOMER_UUID, document: "invalid-doc" },
     });
 
     expect(result.isError).toBe(true);
@@ -58,11 +92,14 @@ describe("customer tools", () => {
 
   it("update_customer rejects invalid phone format", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.callTool({
       name: "update_customer",
-      arguments: { id: 1, phone: "123" },
+      arguments: { uuid: CUSTOMER_UUID, phone: "123" },
     });
 
     expect(result.isError).toBe(true);
@@ -75,11 +112,14 @@ describe("customer tools", () => {
 
   it("update_customer rejects invalid state format", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.callTool({
       name: "update_customer",
-      arguments: { id: 1, state: "invalid" },
+      arguments: { uuid: CUSTOMER_UUID, state: "invalid" },
     });
 
     expect(result.isError).toBe(true);
@@ -92,11 +132,14 @@ describe("customer tools", () => {
 
   it("update_customer rejects invalid zipCode format", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.callTool({
       name: "update_customer",
-      arguments: { id: 1, zipCode: "123" },
+      arguments: { uuid: CUSTOMER_UUID, zipCode: "123" },
     });
 
     expect(result.isError).toBe(true);
@@ -109,11 +152,14 @@ describe("customer tools", () => {
 
   it("update_customer rejects name exceeding max length", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
 
     const result = await client.callTool({
       name: "update_customer",
-      arguments: { id: 1, name: "a".repeat(256) },
+      arguments: { uuid: CUSTOMER_UUID, name: "a".repeat(256) },
     });
 
     expect(result.isError).toBe(true);
