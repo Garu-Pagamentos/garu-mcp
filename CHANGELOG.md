@@ -5,6 +5,25 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.22.0] — 2026-08-22
+
+Via `@garuhq/node@4.0.0`, `scheduledCharges` now targets the versioned
+public API `/api/v1/scheduled-charges`.
+
+### Unaffected
+
+- All 13 scheduled-charge tool schemas — `id` was already an opaque
+  string (`sch_...`), so no tool's input/output shape changed. This is a
+  wire-level move only.
+
+### Fixed
+
+- `get_scheduled_charge`'s description told agents that
+  `transactions[].value` is centavos while `charge.amount` is decimal
+  reais, instructing them to convert before comparing. Both fields are
+  decimal reais — the claim was wrong and could have led an agent to
+  divide a real value by 100. Corrected.
+
 ## [0.21.0] — 2026-08-22
 
 Via `@garuhq/node@3.0.0`, `webhookEvents` now targets the versioned public

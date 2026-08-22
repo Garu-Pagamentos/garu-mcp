@@ -186,7 +186,7 @@ export function registerScheduledChargeTools(
 
   server.tool(
     "get_scheduled_charge",
-    "Get a scheduled charge by ID, bundled with its event timeline and any linked Garu transactions. The response shape is { charge, events, transactions }. Unit caveat: charge.amount is decimal BRL (e.g. 297.50) but transactions[].value is centavos (BRL × 100, e.g. 29750). Convert before comparing.",
+    "Get a scheduled charge by ID, bundled with its event timeline and any linked Garu transactions. The response shape is { charge, events, transactions }. Both charge.amount and transactions[].value are decimal BRL (e.g. 297.50) — never centavos, no conversion needed.",
     {
       id: z.string().describe("Scheduled charge ID, e.g. sch_abc123"),
     },
