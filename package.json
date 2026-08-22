@@ -1,7 +1,7 @@
 {
   "name": "@garuhq/mcp",
   "version": "0.20.0",
-  "description": "Garu MCP server \u2014 payments for AI agents. PIX, card, boleto.",
+  "description": "Garu MCP server — payments for AI agents. PIX, card, boleto.",
   "type": "module",
   "bin": {
     "garu-mcp": "./dist/index.js"
