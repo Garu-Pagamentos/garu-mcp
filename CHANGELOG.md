@@ -5,6 +5,14 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.23.0] — 2026-08-22
+
+Via `@garuhq/node@4.1.0`, `create_customer`, `refund_charge`, and
+`request_plan_refund` are now safe to retry: the SDK attaches an idempotency
+key automatically and the gateway dedupes against it, so a repeated call
+returns the original result instead of a duplicate. Updated each tool's
+description to say so; no schema or behavior change from the caller's side.
+
 ## [0.22.0] — 2026-08-22
 
 Via `@garuhq/node@4.0.0`, `scheduledCharges` now targets the versioned

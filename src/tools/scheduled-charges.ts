@@ -35,7 +35,7 @@ export function registerScheduledChargeTools(
 ): void {
   server.tool(
     "create_scheduled_charge",
-    "Schedule a future charge for an existing customer. Use list_customers first to find the customerId. type='one_time' is the simple case (PIX/Boleto). type='recurring' takes a recurrence config and silent-charges the saved card on every cycle past the first. Card method is recurring-only and requires productId. Pix Automático (methods: ['pix_automatic']) is BACEN auto-debit recurring Pix — the customer authorizes once and later cycles debit silently; it is recurring-only and requires productId. Optional trialDays (1..365, recurring-only) rebases cycle 1 to today + N days and emits customer.trial_started immediately.",
+    "Schedule a future charge for an existing customer. Use list_customers first to find the customerId. type='one_time' is the simple case (PIX/Boleto). type='recurring' takes a recurrence config and silent-charges the saved card on every cycle past the first. Card method is recurring-only and requires productId. Pix Automático (methods: ['pix_automatic']) is BACEN auto-debit recurring Pix — the customer authorizes once and later cycles debit silently; it is recurring-only and requires productId. Optional trialDays (1..365, recurring-only) rebases cycle 1 to today + N days and emits customer.trial_started immediately. Safe to retry: the SDK attaches an idempotency key automatically, so a repeated call returns the original series instead of double-booking recurring billing.",
     {
       customerId: z
         .number()

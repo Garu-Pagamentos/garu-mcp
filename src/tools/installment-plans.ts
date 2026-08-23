@@ -202,7 +202,7 @@ export function registerInstallmentPlanTools(
 
   server.tool(
     "request_plan_refund",
-    "Ask for a carnê to be refunded. Garu does NOT move this money: a boleto cannot be reversed and the funds already settled to the seller, so the return is a bank transfer only they can make. This records the request and notifies the seller team. The carnê KEEPS RUNNING while the request is pending — future parcelas still emit. Transfer the money, then close it with confirm_refund_request.",
+    "Ask for a carnê to be refunded. Garu does NOT move this money: a boleto cannot be reversed and the funds already settled to the seller, so the return is a bank transfer only they can make. This records the request and notifies the seller team. The carnê KEEPS RUNNING while the request is pending — future parcelas still emit. Transfer the money, then close it with confirm_refund_request. Safe to retry: the SDK attaches an idempotency key automatically, and the gateway already refuses a second pending request for the same carnê.",
     {
       uuid: z.string().describe("Installment plan UUID"),
       amount: z

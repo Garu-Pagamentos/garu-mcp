@@ -135,7 +135,9 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
     "refund_charge",
     "Refund a charge fully or partially. Amount is in BRL / reais (e.g. 10.50 for R$10,50). " +
       "For a Pix Automatico charge the refund is asynchronous: the charge returns as refund_pending " +
-      "and only reaches refunded once the transfer settles.",
+      "and only reaches refunded once the transfer settles. For Pix/boleto (which open a refund " +
+      "request instead of an automated reversal), the SDK attaches an idempotency key " +
+      "automatically, so a retry is safe.",
     {
       uuid: z.string().describe("Charge uuid to refund"),
       amount: z
