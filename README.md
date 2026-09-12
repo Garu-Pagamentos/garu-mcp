@@ -121,6 +121,24 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 >
 > Per-product portal config is the **B2B2C primitive**: SaaS that models professionals/coaches/instructors as Products under one Seller can give each one custom branding (`businessName`, `primaryColor`, `logoUrl`) and policies on the customer payment page + `/minha-area` portal — all without fragmenting the seller's accounting.
 
+### Offers (5 tools)
+
+An offer is a **named price on a product**, reachable at `/pay/{productUuid}?offer={slug or id}`. It overrides the price and nothing else — payment methods, installments, carnê, name, description and image all stay on the product, and a bare product link keeps charging the product's own price.
+
+| Tool           | Description                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `list_offers`  | List a product's offers. Active only by default; `active: 'all'` includes deactivated ones     |
+| `get_offer`    | Read one offer's current price and whether it is still active                                  |
+| `create_offer` | Create an offer. `value` is in **reais**, not centavos, and may exceed the product's own price |
+| `update_offer` | Reprice, rename, or activate/deactivate. Deactivating is how you END a promo                   |
+| `delete_offer` | Delete — only while the offer has never sold, otherwise 409                                    |
+
+> **The slug is public and guessable.** Anyone holding the product link can try `?offer=promo`. For pricing that should not circulate, omit `slug` — the link then carries the unguessable offer id.
+>
+> **To end a promo, deactivate rather than delete.** A deactivated link falls back to the product's price and tells the buyer the offer ended, so the sale still completes. Deleting is refused once the offer has sales, so past attribution survives.
+>
+> `create_pix_charge` and `create_boleto_charge` accept an `offer` too — the server resolves the price from it, so the amount is never taken from the agent.
+
 ### Charges (5 tools)
 
 | Tool                   | Description                                        |

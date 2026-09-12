@@ -11,7 +11,11 @@ export const customerSchema = z.object({
     .string()
     .regex(/^\d{10,11}$/)
     .describe("Phone with area code, 10-11 digits"),
-  zipCode: z.string().regex(/^\d{8}$/).optional().describe("ZIP code, 8 digits"),
+  zipCode: z
+    .string()
+    .regex(/^\d{8}$/)
+    .optional()
+    .describe("ZIP code, 8 digits"),
   street: z.string().max(255).optional(),
   number: z.string().max(20).optional(),
   complement: z.string().max(255).optional(),
@@ -25,7 +29,9 @@ export const customerSchema = z.object({
 });
 
 export function ok(data: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+  };
 }
 
 export function fail(err: unknown) {

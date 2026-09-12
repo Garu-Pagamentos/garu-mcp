@@ -8,6 +8,7 @@ import { registerChargeTools } from "./tools/charges.js";
 import { registerCustomerTools } from "./tools/customers.js";
 import { registerInstallmentPlanTools } from "./tools/installment-plans.js";
 import { registerIntegrationTools } from "./tools/integration.js";
+import { registerOfferTools } from "./tools/offers.js";
 import { registerProductTools } from "./tools/products.js";
 import { registerRefundRequestTools } from "./tools/refund-requests.js";
 import { registerScheduledChargeTools } from "./tools/scheduled-charges.js";
@@ -67,6 +68,7 @@ export function createServer(options: CreateServerOptions): McpServer {
   registerInstallmentPlanTools(server, garu);
   registerRefundRequestTools(server, garu);
   registerProductTools(server, garu);
+  registerOfferTools(server, garu);
   registerScheduledChargeTools(server, garu);
   registerWebhookEventTools(server, garu);
   registerIntegrationTools(server, garu);

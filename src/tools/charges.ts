@@ -9,6 +9,16 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
     "Create a PIX charge. Returns a QR code for the customer to pay.",
     {
       productId: z.string().uuid().describe("Product UUID"),
+      offer: z
+        .string()
+        .max(60)
+        .optional()
+        .describe(
+          "Optional offer to charge instead of the product's default price — the " +
+            "slug (e.g. 'black-friday') or the offer id (offer_...). Discover them " +
+            "with list_offers. The SERVER resolves the price; the amount is never " +
+            "taken from here. Answers 409 if the offer was deactivated.",
+        ),
       customer: customerSchema,
       additionalInfo: z
         .string()
@@ -20,11 +30,13 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
       try {
         const params = args as unknown as {
           productId: string;
+          offer?: string;
           customer: Customer;
           additionalInfo?: string;
         };
         const charge = await garu.charges.create({
           productId: params.productId,
+          offer: params.offer,
           paymentMethod: "pix",
           customer: params.customer,
           additionalInfo: params.additionalInfo,
@@ -41,6 +53,16 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
     "Create a boleto bancario charge. Returns a bank slip line for payment.",
     {
       productId: z.string().uuid().describe("Product UUID"),
+      offer: z
+        .string()
+        .max(60)
+        .optional()
+        .describe(
+          "Optional offer to charge instead of the product's default price — the " +
+            "slug (e.g. 'black-friday') or the offer id (offer_...). Discover them " +
+            "with list_offers. The SERVER resolves the price; the amount is never " +
+            "taken from here. Answers 409 if the offer was deactivated.",
+        ),
       customer: customerSchema,
       additionalInfo: z.string().max(1000).optional(),
     },
@@ -48,11 +70,13 @@ export function registerChargeTools(server: McpServer, garu: Garu): void {
       try {
         const params = args as unknown as {
           productId: string;
+          offer?: string;
           customer: Customer;
           additionalInfo?: string;
         };
         const charge = await garu.charges.create({
           productId: params.productId,
+          offer: params.offer,
           paymentMethod: "boleto",
           customer: params.customer,
           additionalInfo: params.additionalInfo,

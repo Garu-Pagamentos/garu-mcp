@@ -7,7 +7,9 @@ function getText(result: ReturnType<typeof fail>): string {
 
 describe("fail() error sanitization", () => {
   it("strips URLs from error messages", () => {
-    const err = new Error("Request failed: https://api.garu.com.br/v1/charges/123");
+    const err = new Error(
+      "Request failed: https://api.garu.com.br/v1/charges/123",
+    );
     const text = getText(fail(err));
 
     expect(text).not.toContain("https://api.garu.com.br");
@@ -44,7 +46,9 @@ describe("fail() error sanitization", () => {
   });
 
   it("strips stack frames", () => {
-    const err = new Error("something failed at Object.create (/app/src/server.js:10:5)");
+    const err = new Error(
+      "something failed at Object.create (/app/src/server.js:10:5)",
+    );
     const text = getText(fail(err));
 
     expect(text).not.toContain("/app/src/server.js");
@@ -58,7 +62,9 @@ describe("fail() error sanitization", () => {
   });
 
   it("takes only the first line of multi-line errors", () => {
-    const err = new Error("first line\nsecond line with secret /home/user/.env");
+    const err = new Error(
+      "first line\nsecond line with secret /home/user/.env",
+    );
     const text = getText(fail(err));
 
     expect(text).toContain("first line");

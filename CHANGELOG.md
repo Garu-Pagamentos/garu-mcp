@@ -5,6 +5,22 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [0.24.0] — 2026-09-12
+
+Adds five offer tools — `list_offers`, `get_offer`, `create_offer`,
+`update_offer`, `delete_offer`. An offer is a named price on a product behind
+its own link, overriding the price and nothing else (Garu v0.23.0).
+
+The charge tools accept an `offer` as well, so an agent can charge an offer's
+price directly instead of only handing out the hosted link.
+
+Requires `@garuhq/node` 5.2.0 (was 4.1.0). The only breaking change in that
+range is 5.0.0 dropping auto-generated idempotency keys, which these tools
+never relied on — they pass through whatever the caller supplies.
+
+The tool-registry test now asserts the offer tool NAMES, not only the total
+count. A count alone stays correct while a tool silently stops registering.
+
 ## [0.23.0] — 2026-08-22
 
 Via `@garuhq/node@4.1.0`, `create_customer`, `refund_charge`, and

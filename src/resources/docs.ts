@@ -153,15 +153,20 @@ export function registerResources(server: McpServer): void {
     },
   );
 
-  server.resource("openapi", "garu://docs/openapi", { mimeType: "text/plain" }, async () => {
-    return {
-      contents: [
-        {
-          uri: "garu://docs/openapi",
-          mimeType: "text/plain",
-          text: "OpenAPI spec available at: https://garu.com.br/api/swagger-json",
-        },
-      ],
-    };
-  });
+  server.resource(
+    "openapi",
+    "garu://docs/openapi",
+    { mimeType: "text/plain" },
+    async () => {
+      return {
+        contents: [
+          {
+            uri: "garu://docs/openapi",
+            mimeType: "text/plain",
+            text: "OpenAPI spec available at: https://garu.com.br/api/swagger-json",
+          },
+        ],
+      };
+    },
+  );
 }

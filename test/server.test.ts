@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { setupServer } from "./helpers.js";
 
 describe("server", () => {
-  it("exposes 49 tools total (6 charge + 6 customer + 7 product + 13 scheduled-charge + 4 webhook-event + 1 integration + 8 installment-plan + 4 refund-request)", async () => {
+  it("exposes 54 tools total (6 charge + 6 customer + 7 product + 5 offer + 13 scheduled-charge + 4 webhook-event + 1 integration + 8 installment-plan + 4 refund-request)", async () => {
     const { server, client, clientTransport, serverTransport } = setupServer();
     await Promise.all([
       server.connect(serverTransport),
@@ -11,7 +11,7 @@ describe("server", () => {
     ]);
 
     const tools = await client.listTools();
-    expect(tools.tools).toHaveLength(49);
+    expect(tools.tools).toHaveLength(54);
     const names = tools.tools.map((t) => t.name);
     // Carnê and refund requests. Named explicitly, not just counted: a tool
     // that silently stops registering keeps the total right if another is
@@ -41,6 +41,18 @@ describe("server", () => {
     expect(names).toContain("retry_webhook_event");
     expect(names).toContain("resend_webhook_event");
     expect(names).toContain("get_integration_setup");
+
+    // Offers (v0.23.0). Named for the same reason as the carnê block above —
+    // a count alone stays right while a tool silently disappears.
+    for (const name of [
+      "list_offers",
+      "get_offer",
+      "create_offer",
+      "update_offer",
+      "delete_offer",
+    ]) {
+      expect(names).toContain(name);
+    }
 
     await client.close();
     await server.close();
