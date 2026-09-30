@@ -378,7 +378,7 @@ export function registerScheduledChargeTools(
 
   server.tool(
     "change_scheduled_charge_payment_method",
-    "Swap the saved card on a recurring series. The new PaymentMethod must belong to the same customerId. Future cycles silent-charge the new card; the in-flight cycle is not retroactively rebound.",
+    "Swap the saved card on a recurring series. The new PaymentMethod must belong to the same customerId AND already bill one of your charges for that customer (a subscription, a scheduled charge, or a past attempt on one of your series) — a card the customer saved on your own payment page qualifies. Any other card, including another customer's, answers 404 exactly like a card id that does not exist. Future cycles silent-charge the new card; the in-flight cycle is not retroactively rebound.",
     {
       id: z.string().describe("Scheduled charge ID"),
       paymentMethodId: z
@@ -386,7 +386,7 @@ export function registerScheduledChargeTools(
         .int()
         .min(1)
         .describe(
-          "PaymentMethod id to bind. Must belong to the same customerId.",
+          "PaymentMethod id to bind. Must belong to the same customerId and already bill one of your charges for that customer; otherwise 404.",
         ),
     },
     async (args) => {

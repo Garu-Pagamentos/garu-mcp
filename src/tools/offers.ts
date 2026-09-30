@@ -22,7 +22,9 @@ const valueField = z
   .positive()
   .describe(
     "Price in REAIS (decimal BRL), e.g. 97.50 — NOT centavos. Same unit as the " +
-      "product's own value. May be higher than the product price: an offer works " +
+      "product's own value. Must be at least 5.00 (R$ 5,00, the platform minimum " +
+      "price); a lower value answers 400. Unlike a product, an offer has no " +
+      "'no price' option. May be higher than the product price: an offer works " +
       "as a premium link as well as a discount.",
   );
 
@@ -124,7 +126,9 @@ export function registerOfferTools(server: McpServer, garu: Garu): void {
     "Update an offer — reprice, rename, or activate/deactivate it. Deactivating is " +
       "the right way to END a promo: the link then falls back to the product's price " +
       "and tells the buyer the offer ended, so the sale still completes. Repricing " +
-      "applies to future sales only; past transactions keep the amount they collected.",
+      "applies to future sales only; past transactions keep the amount they collected. " +
+      "The R$ 5,00 minimum is checked only when you send value, so deactivating or " +
+      "renaming an older offer priced below it still works.",
     {
       offerId: z.string().max(50).describe("Offer id"),
       name: z.string().min(1).max(255).optional(),

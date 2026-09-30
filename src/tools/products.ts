@@ -142,7 +142,11 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
       .optional()
       .describe(
         "Price in decimal BRL / reais (e.g. R$29,90 → 29.90) — NOT centavos. " +
-          "Products store the price in reais, the same as the API and dashboard.",
+          "Must be 0 or at least 5.00 (R$ 5,00, the platform minimum price). " +
+          "0 means the product has no price: it is accepted but cannot be sold " +
+          "through its payment link. From 0.01 to 4.99 the API answers 400. " +
+          "Not checked on a subscription product, whose price lives on its " +
+          "subscription prices.",
       ),
     description: z
       .string()
@@ -206,11 +210,14 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     "create_product",
     "Create a product for the authenticated seller. Returns the created product, " +
       "whose UUID is the same identifier accepted by create_pix_charge / " +
-      "create_boleto_charge. value is in decimal BRL / reais (e.g. 29.90), NOT " +
-      "centavos. Setting pixAutomatic: true exposes Pix " +
-      "Automático (BACEN auto-debit recurring Pix) on the subscription checkout. " +
-      "Pass idempotencyKey to make a retry across process restarts safe — the " +
-      "backend returns the original product instead of creating a duplicate.",
+      "create_boleto_charge. The API requires name, image and value. value is in " +
+      "decimal BRL / reais (e.g. 29.90), NOT centavos, and must be 0 or at least " +
+      "5.00 (R$ 5,00, the platform minimum price); 0 creates a product with no " +
+      "price, which cannot be sold through its payment link. Setting pixAutomatic: " +
+      "true exposes Pix Automático (BACEN auto-debit recurring Pix) on the " +
+      "subscription checkout. Pass idempotencyKey to make a retry across process " +
+      "restarts safe — the backend returns the original product instead of " +
+      "creating a duplicate.",
     {
       ...productWriteShape,
       name: z.string().max(255).describe("Product name (required)."),
@@ -219,7 +226,8 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
         .max(255)
         .optional()
         .describe(
-          "Idempotency key for safe retries. Defaults to a generated UUIDv4.",
+          "Idempotency key for safe retries. Omit it and no key is sent. Derive " +
+            "it from something stable (an order id) so a retry reuses it.",
         ),
     },
     async (args) => {
@@ -237,7 +245,11 @@ export function registerProductTools(server: McpServer, garu: Garu): void {
     "update_product",
     "Update an existing product (partial PATCH — only the fields you provide are " +
       "written; everything else keeps its persisted value). value is in decimal " +
-      "BRL / reais (e.g. 29.90), NOT centavos. Setting pixAutomatic: true exposes Pix Automático (BACEN " +
+      "BRL / reais (e.g. 29.90), NOT centavos, and must be 0 (no price) or at " +
+      "least 5.00 (R$ 5,00); the price is checked only when you send value or " +
+      "turn a subscription product into a one-time one. Omit value to keep the " +
+      "current price: a product priced below R$ 5,00 before the minimum existed " +
+      "keeps selling. Setting pixAutomatic: true exposes Pix Automático (BACEN " +
       "auto-debit recurring Pix) on the subscription checkout. At least one write " +
       "field is required.",
     {

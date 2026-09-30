@@ -139,7 +139,7 @@ describe("create_product", () => {
 
       const result = await client.callTool({
         name: "create_product",
-        arguments: { name: "Plano Pro", value: 2990, pixAutomatic: true },
+        arguments: { name: "Plano Pro", value: 29.9, pixAutomatic: true },
       });
 
       expect(result.isError).toBe(true);
@@ -162,7 +162,7 @@ describe("create_product", () => {
 
     const result = await client.callTool({
       name: "create_product",
-      arguments: { value: 2990 },
+      arguments: { value: 29.9 },
     });
 
     expect(result.isError).toBe(true);
@@ -186,7 +186,7 @@ describe("update_product", () => {
 
       const result = await client.callTool({
         name: "update_product",
-        arguments: { productId: 57, value: 4990 },
+        arguments: { productId: 57, value: 49.9 },
       });
 
       expect(result.isError).toBe(true);

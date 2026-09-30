@@ -5,6 +5,34 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [Unreleased]
+
+Tool descriptions only. No schema, tool name or behaviour changes. They now
+describe rules the gateway enforces since Garu v0.27.0 (2026-09-30).
+
+### Changed
+
+- **`create_product` / `update_product`**: `value` is in reais and must be `0`
+  or at least R$ 5,00, the platform minimum price. `0` is a product with no
+  price, which cannot be sold through its payment link. From R$ 0,01 to
+  R$ 4,99 the API answers 400. On an update the rule applies only when `value`
+  is sent. `create_product` also says the API requires `name`, `image` and
+  `value`.
+- **`create_offer` / `update_offer`**: `value` must be at least R$ 5,00; `0` is
+  refused.
+- **`change_scheduled_charge_payment_method`**: the card must belong to the
+  series' customer and already bill one of your charges for that customer.
+  Any other card answers 404; another customer's card used to answer 400.
+- `create_product`'s `idempotencyKey` no longer claims a key is generated when
+  omitted. None has been since `@garuhq/node` 5.0.0.
+- The server instructions say product and offer prices are reais with a
+  R$ 5,00 minimum.
+- README lists `create_product` and `update_product`, which were missing from
+  the Products table.
+
+The minimum is described, not enforced in the schemas: the gateway reads it
+from a platform setting, so the server stays the only authority.
+
 ## [0.24.0] — 2026-09-12
 
 Adds five offer tools — `list_offers`, `get_offer`, `create_offer`,
