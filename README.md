@@ -184,6 +184,8 @@ Bill an existing customer on a future date — one-time or recurring with card t
 | `clear_scheduled_charge_payment_method`              | Remove saved card; future cycles email-with-link                                                                                                                                                                                                                                                                    |
 | `list_scheduled_charge_attempts`                     | Per-attempt billing log (v0.8.2). Each row carries the canonical `failureCode` for declines — use this to debug recurring billing failures without joining Transactions                                                                                                                                             |
 
+> `create_scheduled_charge` takes `amount` in **reais**, at least R$ 5,00 (the platform minimum per charge), one-time and recurring alike; a lower amount answers 400. Charges created before the minimum existed keep their amount and keep billing.
+
 ### Resources
 
 - `garu://docs/quickstart` — Getting started guide

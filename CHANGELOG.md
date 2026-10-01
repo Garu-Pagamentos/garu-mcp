@@ -8,7 +8,8 @@ Older releases (≤ 0.4.0) are documented only in the corresponding git tag anno
 ## [Unreleased]
 
 Tool descriptions only. No schema, tool name or behaviour changes. They now
-describe rules the gateway enforces since Garu v0.27.0 (2026-09-30).
+describe rules the gateway enforces since Garu v0.27.0 and v0.27.1
+(2026-09-30).
 
 ### Changed
 
@@ -20,13 +21,16 @@ describe rules the gateway enforces since Garu v0.27.0 (2026-09-30).
   `value`.
 - **`create_offer` / `update_offer`**: `value` must be at least R$ 5,00; `0` is
   refused.
+- **`create_scheduled_charge`**: `amount` must be at least R$ 5,00, one-time
+  and recurring alike (Garu v0.27.1); a lower amount answers 400. Existing
+  charges keep their amount and keep billing.
 - **`change_scheduled_charge_payment_method`**: the card must belong to the
   series' customer and already bill one of your charges for that customer.
   Any other card answers 404; another customer's card used to answer 400.
 - `create_product`'s `idempotencyKey` no longer claims a key is generated when
   omitted. None has been since `@garuhq/node` 5.0.0.
 - The server instructions say product and offer prices are reais with a
-  R$ 5,00 minimum.
+  R$ 5,00 minimum, and that a new scheduled charge must be at least R$ 5,00.
 - README lists `create_product` and `update_product`, which were missing from
   the Products table.
 
