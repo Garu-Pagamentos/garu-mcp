@@ -37,6 +37,23 @@ describe rules the gateway enforces since Garu v0.27.0 and v0.27.1
 The minimum is described, not enforced in the schemas: the gateway reads it
 from a platform setting, so the server stays the only authority.
 
+### Fixed
+
+- **Four tools claimed a retry was safe because "the SDK attaches an
+  idempotency key automatically".** `@garuhq/node` stopped doing that in 5.0.0,
+  and this package has used 5.2.0 since 0.24.0. None of these tools takes a
+  key, so none is sent:
+  - `create_scheduled_charge`: a repeated call creates a second series. The
+    description now says so and tells the agent to check
+    `list_scheduled_charges` before calling again.
+  - `refund_charge`: a repeated call is not deduplicated. The description now
+    tells the agent to check `get_charge` first.
+  - `create_customer`: still safe, because the gateway matches an existing
+    customer by document. The description now gives that reason.
+  - `request_plan_refund`: still safe, because the gateway refuses a second
+    pending request for the same carnê. The description now gives only that
+    reason.
+
 ## [0.24.0] — 2026-09-12
 
 Adds five offer tools — `list_offers`, `get_offer`, `create_offer`,
