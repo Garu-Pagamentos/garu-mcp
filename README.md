@@ -105,12 +105,14 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 
 ## Tools
 
-### Products (5 tools)
+### Products (7 tools)
 
 | Tool                          | Description                                                                                                                                           |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `list_products`               | List your seller's products with pagination and search. Each product carries the `pixAutomatic` flag                                                  |
 | `get_product`                 | Get a single product by UUID — the identifier accepted by the charge tools. `pixAutomatic` enables Pix Automático on the public subscription checkout |
+| `create_product`              | Create a product. The API requires `name`, `image` and `value`. `value` is in **reais**: `0` (no price) or at least R$ 5,00                           |
+| `update_product`              | Partial update. Omit `value` to keep the current price; a `value` you send must be `0` or at least R$ 5,00                                            |
 | `get_product_portal_config`   | Read per-product portal customization (B2B2C). Returns `null` if unset — product falls back to seller-level config                                    |
 | `set_product_portal_config`   | Upsert with merge: only fields provided are written. Pass `null` on a field to inherit from seller                                                    |
 | `clear_product_portal_config` | Remove the per-product config; product falls back to seller-level config                                                                              |
@@ -118,6 +120,8 @@ codex mcp add garu --env GARU_API_KEY=sk_live_xxx -- npx -y --package=@garuhq/mc
 > Portal-config tools accept `productId` as either the product UUID (preferred — same id returned by `list_products`) or the legacy numeric id. UUID support added in Garu v0.10.0.
 >
 > Use `list_products` to discover the UUID you'll pass to `create_pix_charge` or `create_boleto_charge`.
+>
+> **Minimum price R$ 5,00.** A product's `value` must be `0` or at least R$ 5,00; from R$ 0,01 to R$ 4,99 the API answers 400. `0` is a product with no price: it is accepted, but it cannot be sold through its payment link. On a subscription product the product's own `value` is not checked. On `update_product` the rule applies only when you send `value`, so a product priced below R$ 5,00 before the minimum existed keeps selling.
 >
 > Per-product portal config is the **B2B2C primitive**: SaaS that models professionals/coaches/instructors as Products under one Seller can give each one custom branding (`businessName`, `primaryColor`, `logoUrl`) and policies on the customer payment page + `/minha-area` portal — all without fragmenting the seller's accounting.
 
@@ -129,7 +133,7 @@ An offer is a **named price on a product**, reachable at `/pay/{productUuid}?off
 | -------------- | ---------------------------------------------------------------------------------------------- |
 | `list_offers`  | List a product's offers. Active only by default; `active: 'all'` includes deactivated ones     |
 | `get_offer`    | Read one offer's current price and whether it is still active                                  |
-| `create_offer` | Create an offer. `value` is in **reais**, not centavos, and may exceed the product's own price |
+| `create_offer` | Create an offer. `value` is in **reais**, at least R$ 5,00, and may exceed the product's price |
 | `update_offer` | Reprice, rename, or activate/deactivate. Deactivating is how you END a promo                   |
 | `delete_offer` | Delete — only while the offer has never sold, otherwise 409                                    |
 
@@ -176,9 +180,11 @@ Bill an existing customer on a future date — one-time or recurring with card t
 | `pause_scheduled_charge` / `resume_scheduled_charge` | Suspend / re-enable a series                                                                                                                                                                                                                                                                                        |
 | `cancel_recurrence_scheduled_charge`                 | Hard-stop future cycles (recurring only)                                                                                                                                                                                                                                                                            |
 | `cancel_at_period_end_scheduled_charge`              | Stripe-style soft-cancel; reversible                                                                                                                                                                                                                                                                                |
-| `change_scheduled_charge_payment_method`             | Swap the saved card                                                                                                                                                                                                                                                                                                 |
+| `change_scheduled_charge_payment_method`             | Swap the saved card. It must already bill one of your charges for that customer, else 404                                                                                                                                                                                                                           |
 | `clear_scheduled_charge_payment_method`              | Remove saved card; future cycles email-with-link                                                                                                                                                                                                                                                                    |
 | `list_scheduled_charge_attempts`                     | Per-attempt billing log (v0.8.2). Each row carries the canonical `failureCode` for declines — use this to debug recurring billing failures without joining Transactions                                                                                                                                             |
+
+> `create_scheduled_charge` takes `amount` in **reais**, at least R$ 5,00 (the platform minimum per charge), one-time and recurring alike; a lower amount answers 400. Charges created before the minimum existed keep their amount and keep billing.
 
 ### Resources
 

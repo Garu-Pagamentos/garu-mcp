@@ -5,6 +5,55 @@ All notable changes to `@garuhq/mcp` are documented in this file. Format:
 
 Older releases (≤ 0.4.0) are documented only in the corresponding git tag annotation.
 
+## [Unreleased]
+
+Tool descriptions only. No schema, tool name or behaviour changes. They now
+describe rules the gateway enforces since Garu v0.27.0 and v0.27.1
+(2026-09-30).
+
+### Changed
+
+- **`create_product` / `update_product`**: `value` is in reais and must be `0`
+  or at least R$ 5,00, the platform minimum price. `0` is a product with no
+  price, which cannot be sold through its payment link. From R$ 0,01 to
+  R$ 4,99 the API answers 400. On an update the rule applies only when `value`
+  is sent. `create_product` also says the API requires `name`, `image` and
+  `value`.
+- **`create_offer` / `update_offer`**: `value` must be at least R$ 5,00; `0` is
+  refused.
+- **`create_scheduled_charge`**: `amount` must be at least R$ 5,00, one-time
+  and recurring alike (Garu v0.27.1); a lower amount answers 400. Existing
+  charges keep their amount and keep billing.
+- **`change_scheduled_charge_payment_method`**: the card must belong to the
+  series' customer and already bill one of your charges for that customer.
+  Any other card answers 404; another customer's card used to answer 400.
+- `create_product`'s `idempotencyKey` no longer claims a key is generated when
+  omitted. None has been since `@garuhq/node` 5.0.0.
+- The server instructions say product and offer prices are reais with a
+  R$ 5,00 minimum, and that a new scheduled charge must be at least R$ 5,00.
+- README lists `create_product` and `update_product`, which were missing from
+  the Products table.
+
+The minimum is described, not enforced in the schemas: the gateway reads it
+from a platform setting, so the server stays the only authority.
+
+### Fixed
+
+- **Four tools claimed a retry was safe because "the SDK attaches an
+  idempotency key automatically".** `@garuhq/node` stopped doing that in 5.0.0,
+  and this package has used 5.2.0 since 0.24.0. None of these tools takes a
+  key, so none is sent:
+  - `create_scheduled_charge`: a repeated call creates a second series. The
+    description now says so and tells the agent to check
+    `list_scheduled_charges` before calling again.
+  - `refund_charge`: a repeated call is not deduplicated. The description now
+    tells the agent to check `get_charge` first.
+  - `create_customer`: still safe, because the gateway matches an existing
+    customer by document. The description now gives that reason.
+  - `request_plan_refund`: still safe, because the gateway refuses a second
+    pending request for the same carnê. The description now gives only that
+    reason.
+
 ## [0.24.0] — 2026-09-12
 
 Adds five offer tools — `list_offers`, `get_offer`, `create_offer`,

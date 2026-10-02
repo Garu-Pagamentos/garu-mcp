@@ -10,8 +10,8 @@ import { customerSchema, ok, fail } from "./shared.js";
 export function registerCustomerTools(server: McpServer, garu: Garu): void {
   server.tool(
     "create_customer",
-    "Create a customer and link to the current seller. Safe to retry: the SDK attaches an " +
-      "idempotency key automatically, so a repeated call returns the original/matched customer " +
+    "Create a customer and link to the current seller. Safe to retry: the gateway matches an " +
+      "existing customer by document (CPF/CNPJ), so a repeated call returns the same customer " +
       "instead of a duplicate.",
     {
       ...customerSchema.shape,

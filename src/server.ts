@@ -47,8 +47,11 @@ export function createServer(options: CreateServerOptions): McpServer {
         "an existing customer on a future date — Garu emails the customer on the due date and alerts " +
         "the seller team if it goes overdue. To bill a scheduled charge immediately instead of waiting " +
         "for its due date, use charge_now_scheduled_charge — it is idempotent (reports already_sent " +
-        "rather than re-charging) so it is safe to retry. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos. " +
+        "rather than re-charging) so it is safe to retry. Schedule amounts are decimal BRL (e.g. 297.50), NOT centavos, " +
+        "and a new scheduled charge must be at least R$ 5,00. " +
         "All monetary values are in BRL (Brazilian Real). " +
+        "Product and offer prices are decimal reais too, never centavos, with a platform minimum of R$ 5,00 " +
+        "(a product may also be 0, meaning no price). " +
         "PIX is the most popular payment method in Brazil — prefer it when the user doesn't specify. " +
         "Use the webhook-event tools (list_webhook_events, get_webhook_event, resend_webhook_event) " +
         "to audit and replay deliveries when a customer reports a missed or unprocessed event. " +
